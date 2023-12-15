@@ -1,3 +1,0 @@
-<header>
-    Quire blog
-</header>

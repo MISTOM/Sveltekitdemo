@@ -1,3 +1,5 @@
+import { json } from '@sveltejs/kit';
+
 /** @type {import('./$types').RequestHandler} */
 export async function GET() {
     let Products = [
@@ -27,6 +29,10 @@ export async function GET() {
                 id: 4,
                 name: 'Nike Air Max'
             }]
-    return new Response(JSON.stringify(Products),
-    {status: 200,});
-};
+    return json(Products ,{
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    });
+}

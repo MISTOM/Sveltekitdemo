@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
 import {createConn} from '$lib/db/db'
-import { error } from 'console';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({locals, request, url}) {

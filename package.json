@@ -13,14 +13,13 @@
 		"start": "node build/index.js"
 	},
 	"devDependencies": {
-		"@supabase/ssr": "^0.0.10",
-		"@supabase/supabase-js": "^2.39.0",
 		"@sveltejs/adapter-node": "^2.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.30.0",
+		"mysql2": "^3.6.5",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"svelte": "^4.2.7",

@@ -1,7 +1,10 @@
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET() {
+export async function GET({locals, request, url}) {
+	const { supabase } = locals;
+	const session = await locals.getSession();
+
 	let Products = [
 		// list of shoe products
 		{
@@ -36,10 +39,25 @@ export async function GET() {
 			name: 'Nike Air Max'
 		}
 	];
-	return json(Products, {
-		status: 200,
-		headers: {
-			'Content-Type': 'application/json'
+
+	let SellerProducts = [
+		{
+			id: 1,
+			name: 'Nike Air Max 90',
+			price: 149.99,
+			image:
+				'https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/7f8b4e0b-5b1f-4e6f-9c0a-9d1c5d6b2b5e/air-max-90-shoe-6WmLXK.jpg',
+			description:
+				'The Nike Air Max 90 stays true to its OG running roots with the iconic Waffle outsole, stitched overlays and classic, color-accented TPU plates. Retro colors celebrate the first generation while Max Air cushioning adds comfort to your journey.'
 		}
-	});
+	]
+
+	if (!session) return json(Products, {status: 200})
+
+	console.log(session.user.id, "Get all Products of this user")
+
+	// return session.user.id products only
+
+	return json(SellerProducts, {status: 200})
+
 }

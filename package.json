@@ -13,6 +13,8 @@
 		"start": "node build/index.js"
 	},
 	"devDependencies": {
+		"@supabase/ssr": "^0.0.10",
+		"@supabase/supabase-js": "^2.39.0",
 		"@sveltejs/adapter-node": "^2.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
@@ -28,8 +30,8 @@
 		"vitest": "^1.0.0"
 	},
 	"engines": {
-		"node": "18.x",
-		"npm": "9.x"
+		"node": "21.x",
+		"npm": "10.x"
 	},
 	"type": "module"
 }

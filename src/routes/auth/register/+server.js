@@ -2,6 +2,7 @@
 import { json } from '@sveltejs/kit'
 // Sign up user
 
+
 /** @type {import('./$types').RequestHandler} */
 export async function POST({locals, request}) {
     const {supabase} = locals

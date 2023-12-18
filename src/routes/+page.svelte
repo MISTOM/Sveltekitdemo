@@ -1,7 +1,7 @@
-<!-- Display using svelte and css in a nice way that this app serves apis for api. and list the api available and able to click them-->
+<!-- Display using svelte and css in a nice way that this app serves apis for api.and list the api available and able to click them-->
 
 <div>
-	<h1>This is theDemocCompany Api page.</h1>
+	<h3>Welcome</h3>
 	<h2>The following apis are available:</h2>
 	<ul>
 		<li>

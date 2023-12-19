@@ -8,32 +8,58 @@ datasource db {
 }
 
 model products {
-  id          Int    @id @default(autoincrement())
-  name        String @db.VarChar(255)
-  description String @db.Text
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String  @db.Text
   price       Int
+  images      String  @db.Text
   sellerId    Int
-  seller      seller @relation(fields: [sellerId], references: [id])
+  seller      seller  @relation(fields: [sellerId], references: [id])
   isApproved  Boolean @default(false)
+  orders      ProductOnOrder[]
 }
 
 model seller {
-  id          Int    @id @default(autoincrement())
-  name        String @db.VarChar(255)
-  email       String @db.VarChar(255)
-  password    String @db.VarChar(255)
-  phoneNumber String @db.VarChar(255)
-  accountNumber String @db.VarChar(255)
-  bankName    String @db.VarChar(255)
-  branchName  String @db.VarChar(255)
-  roleId     Int
-  role        roles  @relation(fields: [roleId], references: [id])
-  products    products[]
-  isApproved  Boolean @default(false)
+  id            Int        @id @default(autoincrement())
+  name          String     @db.VarChar(255)
+  email         String     @db.VarChar(255)
+  password      String     @db.VarChar(255)
+  phoneNumber   String     @db.VarChar(255)
+  accountNumber String     @db.VarChar(255)
+  bankName      String     @db.VarChar(255)
+  branchName    String     @db.VarChar(255)
+  roleId        Int
+  role          roles      @relation(fields: [roleId], references: [id])
+  isApproved    Boolean    @default(false)
+  products      products[]
+  orders        orders[]
+}
+// there is no buyer account hence the buyerid is not needed
+model orders {
+  id         Int      @id @default(autoincrement())
+  sellerId   Int
+  buyerName  String   @db.VarChar(255)
+  buyerEmail String   @db.VarChar(255)
+  buyerPhone String   @db.VarChar(255)
+  totalPrice Int
+  isDelivered Boolean @default(false)
+  seller     seller   @relation(fields: [sellerId], references: [id])
+  products ProductOnOrder[]
+
+}
+
+model ProductOnOrder{
+  orderId Int
+  productId Int
+  quantity Int
+  order orders @relation(fields: [orderId], references: [id])
+  product products @relation(fields: [productId], references: [id])
+
+  @@id([orderId, productId])
 }
 
 model roles {
-  id   Int    @id @default(autoincrement())
-  name String @db.VarChar(255)
+  id     Int      @id @default(autoincrement())
+  name   String   @db.VarChar(255)
   seller seller[]
 }

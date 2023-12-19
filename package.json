@@ -11,7 +11,7 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"start": "node build/index.js",
-		"heroku-postbuild": "npx prisma migrate deploy && npx prisma generate && vite build" 
+		"heroku-postbuild": "npx prisma migrate deploy && npx prisma generate && vite build"
 	},
 	"devDependencies": {
 		"@prisma/client": "^5.7.1",
@@ -21,7 +21,6 @@
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.30.0",
-		"mysql2": "^3.6.5",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"svelte": "^4.2.7",

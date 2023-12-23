@@ -11,19 +11,19 @@ export async function PUT({ params, url }) {
 	const { id } = params;
 	if (!id) return json({ message: 'Product ID not provided to approve' }, { status: 400 });
 
-    const product = await prisma.products.findUnique({
-        where: {
-            id: Number(params.id)
-        }
-    })
-    if(!product) return json({ message: 'Product to approve/disapprove not found' }, { status: 404 });
-
+	const product = await prisma.product.findUnique({
+		where: {
+			id: Number(params.id)
+		}
+	});
+	if (!product)
+		return json({ message: 'Product to approve/disapprove not found' }, { status: 404 });
 
 	if (isApprove === 'false') {
 		try {
-            console.log('disapproving')
-            
-			const result = await prisma.products.update({
+			console.log('disapproving');
+
+			const result = await prisma.product.update({
 				where: {
 					id: Number(id)
 				},
@@ -38,8 +38,8 @@ export async function PUT({ params, url }) {
 		}
 	} else {
 		try {
-            console.log('approving')
-			const result = await prisma.products.update({
+			console.log('approving');
+			const result = await prisma.product.update({
 				where: {
 					id: Number(id)
 				},

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params }) {
 	try {
-		const result = await prisma.products.findMany({
+		const result = await prisma.product.findMany({
 			where: {
 				isApproved: true
 			}

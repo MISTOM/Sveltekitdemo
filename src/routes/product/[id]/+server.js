@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET({ params }) {
 	try {
-		const result = await prisma.products.findUnique({
+		const result = await prisma.product.findUnique({
 			where: {
 				id: Number(params.id)
 			}
@@ -28,25 +28,25 @@ export async function PUT({ params, request }) {
 
 	const { name, description, price, images } = await request.json();
 	try {
-        const product = await prisma.products.findUnique({
-            where: {
-                id: Number(params.id)
-            }
-        })
-        if(!product) return json({ message: 'Product to update not found' }, { status: 404 });
+		const product = await prisma.product.findUnique({
+			where: {
+				id: Number(params.id)
+			}
+		});
+		if (!product) return json({ message: 'Product to update not found' }, { status: 404 });
 
-		const result = await prisma.products.update({
+		const result = await prisma.product.update({
 			where: {
 				id: Number(params.id)
 			},
 			data: {
-				name: name,
-				description: description,
-				price: price,
-				images: images
+				name: name || product.name,
+				description: description || product.description,
+				price: price || product.price,
+				images: images || product.images
 			}
 		});
-
+		return json(result, { status: 201 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });
@@ -58,20 +58,20 @@ export async function DELETE({ params }) {
 	if (!params.id) return json({ message: 'Product ID not provided to delete' }, { status: 400 });
 
 	try {
-        const product = await prisma.products.findUnique({
-            where: {
-                id: Number(params.id)
-            }
-        })
-        if(!product) return json({ message: 'Product to delete not found' }, { status: 404 });
+		const product = await prisma.product.findUnique({
+			where: {
+				id: Number(params.id)
+			}
+		});
+		if (!product) return json({ message: 'Product to delete not found' }, { status: 404 });
 
-		const result = await prisma.products.delete({
+		const result = await prisma.product.delete({
 			where: {
 				id: Number(params.id)
 			}
 		});
 
-		if (result) return json(result, { status: 201 });
+		if (result) return json(result, { status: 204 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

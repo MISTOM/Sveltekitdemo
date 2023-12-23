@@ -1,5 +1,5 @@
 /** @type {import('./$types').RequestHandler} */
-export async function GET() {
+export async function GET({request}) {
 	const res = 'you have reached this server hooray!!';
 	return new Response(res);
 }

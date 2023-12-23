@@ -24,7 +24,7 @@ export async function GET({ params }) {
 
 // Update product by id
 export async function PUT({ params, request, locals }) {
-if (!params.id) return json({ message: 'Product ID not provided to update' }, { status: 400 });
+	if (!params.id) return json({ message: 'Product ID not provided to update' }, { status: 400 });
 
 	//check if user is logged in
 	if (!locals.user) return error(401, 'Unauthorized: You must be logged in to update a product');
@@ -63,24 +63,34 @@ if (!params.id) return json({ message: 'Product ID not provided to update' }, { 
 }
 
 // Delete product by id
-export async function DELETE({ params }) {
+export async function DELETE({ params, locals }) {
 	if (!params.id) return json({ message: 'Product ID not provided to delete' }, { status: 400 });
+	// seller can only delete their own product
+	// admin can delete any product
+
+	if (!locals.user) return error(401, 'Unauthorized: You must be logged in to delete a product');
+	//check if user is a seller
+	if (locals.user.role !== 4) return error(401, 'Unauthorized: You must be a seller to delete a product');
+
+	//check if user is the owner of the product
+	const product = await prisma.product.findUnique({
+		where: {
+			id: Number(params.id)
+		}
+	});
+	if (!product) return error(404, 'Product to delete not found');
+	if (product?.sellerId !== locals.user.id)
+		return error(401, 'Unauthorized: You must be the owner of the product to delete it');
+
 
 	try {
-		const product = await prisma.product.findUnique({
-			where: {
-				id: Number(params.id)
-			}
-		});
-		if (!product) return json({ message: 'Product to delete not found' }, { status: 404 });
-
 		const result = await prisma.product.delete({
 			where: {
 				id: Number(params.id)
 			}
 		});
 
-		if (result) return json(result, { status: 204 });
+		if (result) return json(result, { status: 200 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

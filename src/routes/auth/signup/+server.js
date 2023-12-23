@@ -22,7 +22,6 @@ export async function POST({ request }) {
 	});
 	if (userExists) return error(400, 'User already exists');
 
-
 	try {
 		const user = await prisma.user.create({
 			data: {
@@ -40,9 +39,8 @@ export async function POST({ request }) {
 		const token = jwt.sign({ id }, SECRET_KEY, {
 			expiresIn: maxAge
 		});
-		
 
-		return json({...user, token}, { status: 201 });
+		return json({ ...user, token }, { status: 201 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

@@ -11,10 +11,10 @@ const prisma = new PrismaClient();
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
-	const {email, password} = await request.json();
+	const { email, password } = await request.json();
 
-	if (!email) return error(400, 'Email is required')
-	if (!password) return error(400, 'Password is required')
+	if (!email) return error(400, 'Email is required');
+	if (!password) return error(400, 'Password is required');
 
 	console.log('Origin:', request.headers.get('origin'));
 
@@ -28,7 +28,7 @@ export async function POST({ request }) {
 	if (!user) return error(404, 'User not found');
 
 	const validPassword = await bcrypt.compare(password, user.password);
-	if (!validPassword) return error(400,  'Invalid password' );
+	if (!validPassword) return error(400, 'Invalid password');
 
 	const maxAge = 5 * 60;
 	const token = jwt.sign({ id: user.id, role: user.roleId }, SECRET_KEY, {

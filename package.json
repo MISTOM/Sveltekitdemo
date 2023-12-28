@@ -14,7 +14,7 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"start": "node build/index.js",
-		"heroku-postbuild": "npx prisma migrate deploy && npx prisma generate && npm run build"
+		"heroku-postbuild": "npx prisma generate && npm run build"
 	},
 	"devDependencies": {
 		"@prisma/client": "^5.7.1",

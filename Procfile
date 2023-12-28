@@ -1,2 +1,2 @@
-web: node build/index.js --port $PORT --host 0.0.0.0
-release: npm run build
+web: node build/index.js
+release: npx prisma migrate deploy

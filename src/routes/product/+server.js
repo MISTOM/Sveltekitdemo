@@ -1,7 +1,5 @@
 import { error, json } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '$lib/server/prisma';
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
@@ -43,7 +41,11 @@ export async function POST({ request, locals: { user } }) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
-	if (user.role !== 4) return error(401, 'Unauthorized: You must be a seller to create a product');
+	const roles = await prisma.role.findMany();
+	const role = roles.map((role) => role.id);
+
+	if (user.role !== role[1])
+		return error(401, 'Unauthorized: You must be a seller to create a product');
 
 	const { name, description, price, images } = await request.json();
 	if (!name || !price || !images) return error(400, 'Missing required fields');

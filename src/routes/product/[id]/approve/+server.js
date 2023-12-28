@@ -1,9 +1,7 @@
 //approve a product
 
 import { error, json } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '$lib/server/prisma';
 
 /** @type {import('./$types').RequestHandler} */
 export async function PUT({ params, url, locals }) {
@@ -26,7 +24,6 @@ export async function PUT({ params, url, locals }) {
 
 	try {
 		if (isApprove === 'false') {
-
 			const result = await prisma.product.update({
 				where: {
 					id: Number(id)

@@ -1,8 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { PrismaClient } from '@prisma/client';
+import prisma from '$lib/server/prisma';
 import { deleteOrder } from './utill';
 
-const prisma = new PrismaClient();
 /** @type {import('./$types').RequestHandler}*/
 export async function GET({ params }) {
 	const { id } = params;

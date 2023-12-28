@@ -1,10 +1,8 @@
 import { error, json } from '@sveltejs/kit';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from '$env/static/private';
-
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import auth from '$lib/server/auth';
+import prisma from '$lib/server/prisma';
+// export prisma as a module then import it here
 
 // Sign up user
 /** @type {import('./$types').RequestHandler} */
@@ -12,8 +10,7 @@ export async function POST({ request }) {
 	const { name, email, password, accountNumber, bankName, branchName } = await request.json();
 	if (!name || !email || !password) return error(400, 'Missing required fields');
 
-	const salt = await bcrypt.genSalt();
-	const hashedPassword = await bcrypt.hash(password, salt);
+	const hashedPassword = await auth.hash(password);
 	// check if user exists
 	const userExists = await prisma.user.findUnique({
 		where: {
@@ -23,6 +20,9 @@ export async function POST({ request }) {
 	if (userExists) return error(400, 'User already exists');
 
 	try {
+		const roles = await prisma.role.findMany();
+		const role = roles.map((role) => role.id);
+
 		const user = await prisma.user.create({
 			data: {
 				name: name,
@@ -31,14 +31,13 @@ export async function POST({ request }) {
 				accountNumber: accountNumber || null,
 				bankName: bankName || null,
 				branchName: branchName || null,
-				roleId: 4
+				roleId: role[1]
 			}
 		});
-		let id = user.id;
-		const maxAge = 5 * 60; //  5 minutes
-		const token = jwt.sign({ id }, SECRET_KEY, {
-			expiresIn: maxAge
-		});
+
+		console.log('User here', user);
+
+		const token = auth.sign(user);
 
 		return json({ ...user, token }, { status: 201 });
 	} catch (e) {

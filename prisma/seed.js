@@ -1,16 +1,15 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import prisma from '$lib/server/prisma';
 
 async function main() {
-	await prisma.roles.create({
+	await prisma.role.create({
 		data: {
 			name: 'ADMIN'
 		}
 	});
 
-	await prisma.roles.create({
+	await prisma.role.create({
 		data: {
 			name: 'SELLER'
 		}

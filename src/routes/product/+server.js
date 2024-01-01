@@ -3,36 +3,25 @@ import prisma from '$lib/server/prisma';
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ locals }) {
-	//it theres a user in session get the user id and get their products only
-	console.log('User', locals.user);
+export async function GET({ locals: { user } }) {
+	const roles = await prisma.role.findMany();
+	const role = roles.map((role) => role.id);
 
-	if (locals.user) {
-		try {
-			const result = await prisma.product.findMany({
-				where: {
-					sellerId: locals.user.id
-				}
-			});
-
-			return json(result, { status: 200 });
-		} catch (e) {
-			console.log(e);
-			return json(e, { status: 500 });
-		}
+	let whereClause
+	if (user){
+		whereClause = user.role === role[0] ? {} : { sellerId: user.id };
+	} else{
+		whereClause = { isApproved: true };
 	}
 
 	try {
 		const result = await prisma.product.findMany({
-			where: {
-				isApproved: true
-			}
-		});
+			where: whereClause
+		})
 
 		return json(result, { status: 200 });
-	} catch (e) {
-		console.log(e);
-		return json(e, { status: 500 });
+	} catch (error) {
+		return json(error, { status: 500 });
 	}
 }
 

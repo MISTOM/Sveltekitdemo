@@ -15,20 +15,20 @@ export async function POST({ request }) {
 	console.log('Origin:', request.headers.get('origin'));
 
 	//check if user had already logged in
-    let user;
-    try {
-        user = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        });
-    } catch (e) {
-        console.error(e);
-        return error(500, 'An error occurred while trying to find the user');
-    }
+	let user;
+	try {
+		user = await prisma.user.findUnique({
+			where: {
+				email: email
+			}
+		});
+	} catch (e) {
+		console.error(e);
+		return error(500, 'An error occurred while trying to find the user');
+	}
 	if (!user) return error(404, 'User not found');
 
-	await auth.compare(password, user.password)
+	await auth.compare(password, user.password);
 	const token = auth.sign(user);
 	return json({ ...user, token }, { status: 200 });
 }

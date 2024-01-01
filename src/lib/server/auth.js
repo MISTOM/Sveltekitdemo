@@ -1,7 +1,7 @@
+import { SECRET_KEY } from '$env/static/private';
 import bcrypt from 'bcrypt';
 import { error } from '@sveltejs/kit';
-import jwt from 'jsonwebtoken';
-import { SECRET_KEY } from '$env/static/private';
+import jwt, { verify } from 'jsonwebtoken';
 
 export default {
 	/**
@@ -20,11 +20,14 @@ export default {
 		});
 	},
 
+	// async verify(token){
+
+	// }
+
 	/**
-	 *
+	 * Compare Passwords to it's hash
 	 * @param {String | Buffer} password
 	 * @param {String} hash
-	 * @returns
 	 */
 	async compare(password, hash) {
 		const validPassword = await bcrypt.compare(password, hash);
@@ -32,7 +35,7 @@ export default {
 	},
 
 	/**
-	 * 
+	 *
 	 * @param {String | Buffer} password The password to encrypt
 	 * @returns Encrypted Password
 	 */

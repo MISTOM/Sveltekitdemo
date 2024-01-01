@@ -16,12 +16,13 @@ export async function GET({ url, locals }) {
 
 	if (locals?.user?.role === roleId[0]) {
 		// If user is an admin, get all orders
-		whereClause = isDeliveredParam !==null ? { order: { isDelivered } } : {};
+		whereClause = isDeliveredParam !== null ? { order: { isDelivered } } : {};
 	} else if (locals?.user?.role === roleId[1]) {
 		// If user is a seller, get only his orders
-		whereClause = isDeliveredParam !==null 
-			? { sellerId: locals.user.id, order: { isDelivered } }
-			: { sellerId: locals.user.id};
+		whereClause =
+			isDeliveredParam !== null
+				? { sellerId: locals.user.id, order: { isDelivered } }
+				: { sellerId: locals.user.id };
 	} else {
 		return error(405, 'Unauthorized');
 	}

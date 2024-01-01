@@ -6,8 +6,8 @@ declare global {
 	namespace App {
 		interface Locals {
 			user: {
-				id: number,
-				role: number
+				id: number;
+				role: number;
 			};
 		}
 	}

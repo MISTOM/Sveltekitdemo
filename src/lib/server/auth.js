@@ -1,7 +1,7 @@
 import { SECRET_KEY } from '$env/static/private';
 import bcrypt from 'bcrypt';
 import { error } from '@sveltejs/kit';
-import jwt, { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 export default {
 	/**

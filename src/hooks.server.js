@@ -2,32 +2,56 @@ import { SECRET_KEY } from '$env/static/private';
 import jwt from 'jsonwebtoken';
 
 /**
- *
  * @type import('@sveltejs/kit').Handle
  */
 export const handle = async ({ event, resolve }) => {
+
+	// Apply cors headers
+	if(event.request.method === 'OPTIONS'){
+		return new Response(null, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+
+			}
+		})
+	}
+	
+	
 	//authenticate user then set user in event.locals.user
 	const token = event.request.headers.get('Authorization')?.split(' ')[1]; // Bearer <token>
 	if (token) {
 		try {
 			event.locals.user = jwt.verify(token, SECRET_KEY);
-			// console.log('Verified token', event.locals.user);
+			console.log('Verified token', event.locals.user);
 		} catch (e) {
-			console.log('Token Error', e);
+			//@ts-ignore
+			console.log(e.message);
 		}
 	}
+	
+	//get the form data from the request and set it in event.locals.data
+	if(event.request.method === 'POST'){
+		//check if there is form data if not just proceed
+		const contentType = event.request.headers.get('content-type');
+		if(contentType && contentType.includes('multipart/form-data')){
+			const formData = await event.request.formData();
+			event.locals.data = formData;
+		}
+	}
+	
+	const response = await resolve(event);
+	response.headers.append('Access-Control-Allow-Origin', '*');
+	response.headers.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	response.headers.append('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-	// if (event.url.pathname.startsWith('/protected')) {
-	// 	if (!event.locals.user) {
-	// 		return json({ error: 'not authenticated' }, { status: 401 });
-	// 	}
-	// }
 
-	// Bypass SvelteKit's CSRF protection for this specific origin during development
-	// if (event.request.headers.get('origin') === 'http://localhost:5173' && process.env.NODE_ENV === 'development') {
-	// 	const response = await resolve(event);
-	// 	return response;
-	//   }
+	// Bypass SvelteKit's CSRF protection for this specific origin
+	if (event.request.headers.get('origin') === 'http://localhost:5173') {
+		const response = await resolve(event);
+		return response;
+	  }
 
-	return resolve(event);
+	return response;
 };

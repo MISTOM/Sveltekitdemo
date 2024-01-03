@@ -6,13 +6,14 @@ import prisma from '$lib/server/prisma';
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
-	const { email, password } = await request.json();
+export async function POST({ locals: { data } }) {;
+	const email = data?.get('email')?.toString();
+	const password = data?.get('password')?.toString();
 
 	if (!email) return error(400, 'Email is required');
 	if (!password) return error(400, 'Password is required');
 
-	console.log('Origin:', request.headers.get('origin'));
+	// console.log('Origin:', request.headers.get('origin'));
 
 	//check if user had already logged in
 	let user;

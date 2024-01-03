@@ -26,7 +26,7 @@ export async function GET({ locals: { user } }) {
 }
 
 //Create product
-export async function POST({ request, locals: { user } }) {
+export async function POST({ request, locals: { user, data } }) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
@@ -36,7 +36,13 @@ export async function POST({ request, locals: { user } }) {
 	if (user.role !== role[1])
 		return error(401, 'Unauthorized: You must be a seller to create a product');
 
-	const { name, description, price, images } = await request.json();
+	const name = data?.get('name')?.toString();
+	const description = data?.get('description')?.toString();
+	const price = data?.get('price')?.toString();
+	const images = data?.get('images')?.toString();
+
+
+	// const { name, description, price, images } = await request.json();
 	if (!name || !price || !images) return error(400, 'Missing required fields');
 
 	try {
@@ -44,7 +50,7 @@ export async function POST({ request, locals: { user } }) {
 			data: {
 				name: name,
 				description: description,
-				price: price,
+				price: Number(price),
 				images: JSON.stringify(images),
 				sellerId: user.id,
 				isApproved: false

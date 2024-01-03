@@ -24,7 +24,7 @@ export async function GET({ url, locals }) {
 				? { sellerId: locals.user.id, order: { isDelivered } }
 				: { sellerId: locals.user.id };
 	} else {
-		return error(405, 'Unauthorized');
+		return error(401, 'Unauthorized');
 	}
 
 	try {

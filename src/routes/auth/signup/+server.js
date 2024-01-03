@@ -1,13 +1,18 @@
 import { error, json } from '@sveltejs/kit';
-import { SECRET_KEY } from '$env/static/private';
 import auth from '$lib/server/auth';
 import prisma from '$lib/server/prisma';
-// export prisma as a module then import it here
 
 // Sign up user
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
-	const { name, email, password, accountNumber, bankName, branchName } = await request.json();
+export async function POST({ request, locals: { data } }) {
+	const name = data?.get('name')?.toString();
+	const email = data?.get('email')?.toString();
+	const password = data?.get('password')?.toString();
+	const accountNumber = data?.get('accountNumber')?.toString();
+	const bankName = data?.get('bankName')?.toString();
+	const branchName = data?.get('branchName')?.toString();
+	
+
 	if (!name || !email || !password) return error(400, 'Missing required fields');
 
 	const hashedPassword = await auth.hash(password);

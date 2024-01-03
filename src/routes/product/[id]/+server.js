@@ -43,7 +43,12 @@ export async function PUT({ params, request, locals }) {
 	if (product?.sellerId !== locals.user.id)
 		return error(401, 'Unauthorized: You must be the owner of the product to update it');
 
-	const { name, description, price, images, quantity } = await request.json();
+	// const { name, description, price, images, quantity } = await request.json();
+	const name = locals.formData.get('name')?.toString();
+	const description = locals.formData.get('description')?.toString();
+	const price = parseInt(locals.formData.get('price'));
+	const images = locals.formData.get('images')?.toString();
+	const quantity = parseInt(locals.formData.get('quantity'));
 	try {
 		const result = await prisma.product.update({
 			where: {
@@ -52,9 +57,9 @@ export async function PUT({ params, request, locals }) {
 			data: {
 				name: name || product.name,
 				description: description || product.description,
-				price: price || product.price,
+				price: isNaN(price)?  product.price : price,
 				images: images || product.images,
-				quantity: quantity || product.quantity
+				quantity: isNaN(quantity)? product.quantity: quantity
 			}
 		});
 		return json(result, { status: 201 });

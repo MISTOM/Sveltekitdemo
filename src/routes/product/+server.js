@@ -26,7 +26,7 @@ export async function GET({ locals: { user } }) {
 }
 
 //Create product
-export async function POST({ request, locals: { user, data } }) {
+export async function POST({ request, locals: { user, formData }}) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
@@ -36,10 +36,10 @@ export async function POST({ request, locals: { user, data } }) {
 	if (user.role !== role[1])
 		return error(401, 'Unauthorized: You must be a seller to create a product');
 
-	const name = data?.get('name')?.toString();
-	const description = data?.get('description')?.toString();
-	const price = data?.get('price')?.toString();
-	const images = data?.get('images')?.toString();
+	const name = formData.get('name');
+	const description = formData.get('description')?.toString();
+	const price = formData.get('price');
+	const images = formData.get('images');
 
 
 	// const { name, description, price, images } = await request.json();
@@ -48,10 +48,10 @@ export async function POST({ request, locals: { user, data } }) {
 	try {
 		const result = await prisma.product.create({
 			data: {
-				name: name,
+				name: name.toString(),
 				description: description,
-				price: Number(price),
-				images: JSON.stringify(images),
+				price: parseInt(price),
+				images: images.toString(),
 				sellerId: user.id,
 				isApproved: false
 			}

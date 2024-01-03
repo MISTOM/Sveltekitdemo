@@ -6,9 +6,11 @@ import prisma from '$lib/server/prisma';
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ locals: { data } }) {;
-	const email = data?.get('email')?.toString();
-	const password = data?.get('password')?.toString();
+export async function POST({ request ,locals: { formData } }) {;
+	const email = formData?.get('email');
+	const password = formData?.get('password');
+
+	// const { email, password } = await request.json();
 
 	if (!email) return error(400, 'Email is required');
 	if (!password) return error(400, 'Password is required');
@@ -20,7 +22,7 @@ export async function POST({ locals: { data } }) {;
 	try {
 		user = await prisma.user.findUnique({
 			where: {
-				email: email
+				email: email.toString()
 			}
 		});
 	} catch (e) {
@@ -29,7 +31,7 @@ export async function POST({ locals: { data } }) {;
 	}
 	if (!user) return error(404, 'User not found');
 
-	await auth.compare(password, user.password);
+	await auth.compare(password.toString(), user.password);
 	const token = auth.sign(user);
 	return json({ ...user, token }, { status: 200 });
 }

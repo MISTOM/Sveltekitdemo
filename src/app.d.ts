@@ -9,7 +9,7 @@
 				id: number;
 				role: number;
 			},
-			data: FormData
+			formData: FormData
 		}
 	}
 	// interface Error {}

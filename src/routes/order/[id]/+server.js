@@ -9,10 +9,26 @@ export async function GET({ params }) {
 		const result = await prisma.orders.findUnique({
 			where: {
 				id: parseInt(id)
+			}, include: {
+				products: {
+					include: {
+						product: true,
+						seller: true
+					}
+				}
 			}
 		});
 		if (!result) return json({ message: 'Order not found' }, { status: 404 });
-		return json(result, { status: 200 });
+		const grouped = {
+			...result,
+			products: result.products.map(productOnOrder => ({
+			...productOnOrder.product,
+			sellerId: productOnOrder.seller.id,
+			orderedQuantity: productOnOrder.quantity
+		}))
+        };
+
+		return json(grouped, { status: 200 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

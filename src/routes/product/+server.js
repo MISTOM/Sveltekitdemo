@@ -1,5 +1,14 @@
+import { v2 as cloudinary } from 'cloudinary';
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
+import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET} from '$env/static/private'
+
+
+cloudinary.config({
+	cloud_name: 'dya9eyh8f',
+	api_key: CLOUDINARY_API_KEY ,
+	api_secret: CLOUDINARY_API_SECRET,
+})
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
@@ -39,7 +48,16 @@ export async function POST({ request, locals: { user, formData }}) {
 	const name = formData.get('name');
 	const description = formData.get('description')?.toString();
 	const price = formData.get('price');
-	const images = formData.get('images');
+	const images = formData.getAll('images');
+
+	const uploadPromises = images.map(async image => {
+		const buffer = await new Response(image).arrayBuffer()
+		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`
+		const result = await cloudinary.uploader.upload(dataUrl);
+		return result.secure_url;
+	})
+	const uploadedImages = await Promise.all(uploadPromises)
+
 
 
 	// const { name, description, price, images } = await request.json();
@@ -51,7 +69,7 @@ export async function POST({ request, locals: { user, formData }}) {
 				name: name.toString(),
 				description: description,
 				price: parseInt(price),
-				images: images.toString(),
+				images: JSON.stringify(uploadedImages),
 				sellerId: user.id,
 				isApproved: false
 			}

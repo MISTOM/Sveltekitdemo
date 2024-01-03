@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { deleteOrder } from './utill';
 
@@ -71,13 +71,14 @@ export async function DELETE({ params }) {
 			id
 		}
 	});
-	if (!product) return json({ message: 'Product not found' }, { status: 404 });
+	if (!product) return error(404, 'Order to delete not found');
 
 	try {
 		const order = await deleteOrder(id);
-		return json(order, { status: 201 });
+		return json(order, { status: 200 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		//@ts-ignore
+		return error(e.status, e.body.message);
 	}
 }

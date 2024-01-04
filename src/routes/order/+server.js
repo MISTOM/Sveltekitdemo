@@ -95,10 +95,10 @@ export async function GET({ url, locals }) {
 // Create order
 // @ts-ignore
 export async function POST({ request }) {
-	const { buyerName, buyerEmail, buyerPhone, totalPrice, products } = await request.json();
+	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
 	try {
-		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone, totalPrice);
+		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 		return json(order, { status: 200 });
 	} catch (e) {
 		// @ts-ignore

@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma';
 
 // Sign up user
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request, locals: { data } }) {
+export async function POST({ locals: { data } }) {
 	const name = data?.get('name')?.toString();
 	const email = data?.get('email')?.toString();
 	const password = data?.get('password')?.toString();

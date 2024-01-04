@@ -1,17 +1,23 @@
-<!-- Display using svelte and css in a nice way that this app serves apis for api.and list the api available and able to click them-->
+<!-- Make the page look a littlebit nicer With a background that is a little bit less  harsh on the eyes
+-->
+
 
 <div>
-	<h3>Welcome</h3>
-	<h2>The following apis are available:</h2>
-	<ul>
-		<li>
-			<a href="/api/">/api/</a>
-		</li>
-		<li>
-			<a href="/api/v1/products/1">/api/v1/product[=product_id] </a>
-		</li>
-		<li>
-			<a href="/api/product">/api/product</a>
-		</li>
-	</ul>
+	<h1>Welcome to Sneaker Empire Backend</h1>
 </div>
+
+<style>
+	div {
+		margin: 0 auto;
+		width: 80%;
+		background-color: #f1f1f1;
+		border-radius: 8%;
+
+	}
+
+	h1 {
+		text-align: center;
+	}
+	
+
+</style>

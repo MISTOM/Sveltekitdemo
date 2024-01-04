@@ -7,10 +7,9 @@ import prisma from '$lib/server/prisma';
  * @param {String} buyerName
  * @param {String} buyerEmail
  * @param {String} buyerPhone
- * @param {Number} totalPrice
  * @returns {Promise<import('@prisma/client').Orders>} Returns a Promise of the order created
  */
-export const createOrder = async (products, buyerName, buyerEmail, buyerPhone, totalPrice) => {
+export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) => {
 	// Validate input data...
 
 	try {
@@ -106,3 +105,67 @@ export const deleteOrder = async (id) => {
 		return order;
 	});
 };
+
+
+//TODO 📌📌
+// /**
+//  * Validate the input data for creating an order.
+//  * @param {{id: number, quantity: number}[]} products
+//  * @param {String} buyerName
+//  * @param {String} buyerEmail
+//  * @param {String} buyerPhone
+//  * @returns {boolean} Returns true if the input data is valid, false otherwise.
+//  */
+// const validateOrderInput = (products, buyerName, buyerEmail, buyerPhone) => {
+//     // Add your validation logic here...
+//     return true;
+// };
+
+// /**
+//  * Calculate the total price of the order.
+//  * @param {{id: number, quantity: number}[]} products
+//  * @param {{id: number, quantity: number, price: number}[]} dbProducts
+//  * @returns {number} Returns the total price of the order.
+//  */
+// const calculateTotalPrice = (products, dbProducts) => {
+//     let calculatedTotalPrice = 0;
+
+//     for (const orderProduct of products) {
+//         const productOnOrder = dbProducts.find((dbProduct) => dbProduct.id === orderProduct.id);
+//         if (!productOnOrder) throw new Error(`Product ${orderProduct.id} not found`);
+//         if (productOnOrder.quantity < orderProduct.quantity)
+//             throw new Error(`Not enough quantity of product ${(productOnOrder.id, productOnOrder.name)} available`);
+
+//         calculatedTotalPrice += productOnOrder.price * orderProduct.quantity;
+//     }
+
+//     return calculatedTotalPrice;
+// };
+
+// /**
+//  * Create an order.
+//  * @param {{id: number, quantity: number}[]} products
+//  * @param {String} buyerName
+//  * @param {String} buyerEmail
+//  * @param {String} buyerPhone
+//  * @returns {Promise<import('@prisma/client').Orders>} Returns a Promise of the order created
+//  */
+// export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) => {
+//     if (!validateOrderInput(products, buyerName, buyerEmail, buyerPhone)) {
+//         throw new Error('Invalid input data');
+//     }
+
+//     const productIds = products.map((_product) => _product.id);
+//     const dbProducts = await prisma.product.findMany({
+//         where: {
+//             id: {
+//                 in: productIds
+//             }
+//         },
+//         select: { id: true, quantity: true, price: true } // Fetch only the necessary fields
+//     });
+
+//     const totalPrice = calculateTotalPrice(products, dbProducts);
+
+//     // Create the order in the database...
+// };

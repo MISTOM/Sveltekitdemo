@@ -1,4 +1,4 @@
-import { SECRET_KEY, ORIGIN } from '$env/static/private';
+import { SECRET_KEY } from '$env/static/private';
 import jwt from 'jsonwebtoken';
 
 /**

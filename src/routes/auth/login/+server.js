@@ -6,7 +6,7 @@ import prisma from '$lib/server/prisma';
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request ,locals: { formData } }) {;
+export async function POST({ request, locals: { formData } }) {
 	const email = formData?.get('email');
 	const password = formData?.get('password');
 

@@ -2,16 +2,14 @@
 
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME} from '$env/static/private'
-import {v2 as cloudinary} from 'cloudinary';
+import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
+import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
 	cloud_name: CLOUDINARY_NAME,
-	api_key: CLOUDINARY_API_KEY ,
-	api_secret: CLOUDINARY_API_SECRET,
-})
-
-
+	api_key: CLOUDINARY_API_KEY,
+	api_secret: CLOUDINARY_API_SECRET
+});
 
 export async function GET({ params }) {
 	try {
@@ -67,9 +65,9 @@ export async function PUT({ params, request, locals }) {
 			data: {
 				name: name || product.name,
 				description: description || product.description,
-				price: isNaN(price)?  product.price : price,
+				price: isNaN(price) ? product.price : price,
 				images: images || product.images,
-				quantity: isNaN(quantity)? product.quantity: quantity
+				quantity: isNaN(quantity) ? product.quantity : quantity
 			}
 		});
 		return json(result, { status: 201 });
@@ -91,7 +89,8 @@ export async function DELETE({ params, locals }) {
 	const product = await prisma.product.findUnique({
 		where: {
 			id: Number(params.id)
-		}, select: {
+		},
+		select: {
 			images: true,
 			sellerId: true
 		}
@@ -102,8 +101,8 @@ export async function DELETE({ params, locals }) {
 
 	try {
 		//delete images from cloudinary
-		const publicIds = JSON.parse(product.images).map(image => image.publicId);
-		const deletePromises = publicIds.map(publicId => cloudinary.uploader.destroy(publicId));
+		const publicIds = JSON.parse(product.images).map((image) => image.publicId);
+		const deletePromises = publicIds.map((publicId) => cloudinary.uploader.destroy(publicId));
 		await Promise.all(deletePromises);
 
 		//delete product from database
@@ -120,9 +119,6 @@ export async function DELETE({ params, locals }) {
 		return error(e.status, e.message);
 	}
 }
-
-
-
 
 // // Parse the old images
 // const oldImages = JSON.parse(product.images);

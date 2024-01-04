@@ -18,15 +18,15 @@ export async function GET({ url, locals }) {
 	if (locals?.user?.role === roleId[0]) {
 		// If user is an admin, get all orders
 		whereClause = isDeliveredParam !== null ? { order: { isDelivered } } : {};
-	// @ts-ignore
+		// @ts-ignore
 	} else if (locals?.user?.role === roleId[1]) {
 		// If user is a seller, get only his orders
 		whereClause =
 			isDeliveredParam !== null
-				// @ts-ignore
-				? { sellerId: locals.user.id, order: { isDelivered } }
-				// @ts-ignore
-				: { sellerId: locals.user.id };
+				? // @ts-ignore
+					{ sellerId: locals.user.id, order: { isDelivered } }
+				: // @ts-ignore
+					{ sellerId: locals.user.id };
 	} else {
 		return error(401, 'Unauthorized');
 	}
@@ -66,10 +66,10 @@ export async function GET({ url, locals }) {
 		/** @type {Order[]} */
 		const grouped = result.reduce((acc, cur) => {
 			// @ts-ignore
-			const existingOrder = acc.find(order => order.orderId === cur.orderId);
+			const existingOrder = acc.find((order) => order.orderId === cur.orderId);
 			if (existingOrder) {
 				// @ts-ignore
-				existingOrder.products.push({...cur.product, orderedQuantity: cur.quantity});
+				existingOrder.products.push({ ...cur.product, orderedQuantity: cur.quantity });
 			} else {
 				// @ts-ignore
 				acc.push({
@@ -79,13 +79,11 @@ export async function GET({ url, locals }) {
 					buyerPhone: cur.order.buyerPhone,
 					totalPrice: cur.order.totalPrice,
 					isDelivered: cur.order.isDelivered,
-					products: [{...cur.product, orderedQuantity: cur.quantity}]
+					products: [{ ...cur.product, orderedQuantity: cur.quantity }]
 				});
 			}
 			return acc;
 		}, []);
-
-
 
 		return json(grouped, { status: 200 });
 	} catch (e) {

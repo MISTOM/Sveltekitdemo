@@ -1,14 +1,13 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME} from '$env/static/private'
-
+import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
 
 cloudinary.config({
 	cloud_name: CLOUDINARY_NAME,
-	api_key: CLOUDINARY_API_KEY ,
-	api_secret: CLOUDINARY_API_SECRET,
-})
+	api_key: CLOUDINARY_API_KEY,
+	api_secret: CLOUDINARY_API_SECRET
+});
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
@@ -16,17 +15,17 @@ export async function GET({ locals: { user } }) {
 	const roles = await prisma.role.findMany();
 	const role = roles.map((role) => role.id);
 
-	let whereClause
-	if (user){
+	let whereClause;
+	if (user) {
 		whereClause = user.role === role[0] ? {} : { sellerId: user.id };
-	} else{
+	} else {
 		whereClause = { isApproved: true };
 	}
 
 	try {
 		const result = await prisma.product.findMany({
 			where: whereClause
-		})
+		});
 
 		return json(result, { status: 200 });
 	} catch (error) {
@@ -35,7 +34,7 @@ export async function GET({ locals: { user } }) {
 }
 
 //Create product
-export async function POST({ request, locals: { user, formData }}) {
+export async function POST({ request, locals: { user, formData } }) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
@@ -52,15 +51,13 @@ export async function POST({ request, locals: { user, formData }}) {
 	const quantity = parseInt(formData.get('quantity'));
 
 	//upload images to cloudinary
-	const uploadPromises = images.map(async image => {
-		const buffer = await new Response(image).arrayBuffer()
-		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`
+	const uploadPromises = images.map(async (image) => {
+		const buffer = await new Response(image).arrayBuffer();
+		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
 		const result = await cloudinary.uploader.upload(dataUrl);
-		return {url: result.secure_url, publicId: result.public_id};
-	})
-	const uploadedImages = await Promise.all(uploadPromises)
-
-	
+		return { url: result.secure_url, publicId: result.public_id };
+	});
+	const uploadedImages = await Promise.all(uploadPromises);
 
 	// const { name, description, price, images } = await request.json();
 	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
@@ -71,7 +68,7 @@ export async function POST({ request, locals: { user, formData }}) {
 				name: name.toString(),
 				description: description,
 				price: parseInt(price),
-				quantity: quantity? quantity : 0,
+				quantity: quantity ? quantity : 0,
 				images: JSON.stringify(uploadedImages),
 				sellerId: user.id,
 				isApproved: false

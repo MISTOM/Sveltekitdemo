@@ -11,7 +11,6 @@ export async function POST({ request, locals: { data } }) {
 	const accountNumber = data?.get('accountNumber')?.toString();
 	const bankName = data?.get('bankName')?.toString();
 	const branchName = data?.get('branchName')?.toString();
-	
 
 	if (!name || !email || !password) return error(400, 'Missing required fields');
 

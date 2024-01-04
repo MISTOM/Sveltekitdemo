@@ -1,11 +1,11 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET} from '$env/static/private'
+import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME} from '$env/static/private'
 
 
 cloudinary.config({
-	cloud_name: 'dya9eyh8f',
+	cloud_name: CLOUDINARY_NAME,
 	api_key: CLOUDINARY_API_KEY ,
 	api_secret: CLOUDINARY_API_SECRET,
 })
@@ -49,19 +49,21 @@ export async function POST({ request, locals: { user, formData }}) {
 	const description = formData.get('description')?.toString();
 	const price = formData.get('price');
 	const images = formData.getAll('images');
+	const quantity = parseInt(formData.get('quantity'));
 
+	//upload images to cloudinary
 	const uploadPromises = images.map(async image => {
 		const buffer = await new Response(image).arrayBuffer()
 		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`
 		const result = await cloudinary.uploader.upload(dataUrl);
-		return result.secure_url;
+		return {url: result.secure_url, publicId: result.public_id};
 	})
 	const uploadedImages = await Promise.all(uploadPromises)
 
-
+	
 
 	// const { name, description, price, images } = await request.json();
-	if (!name || !price || !images) return error(400, 'Missing required fields');
+	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
 
 	try {
 		const result = await prisma.product.create({
@@ -69,6 +71,7 @@ export async function POST({ request, locals: { user, formData }}) {
 				name: name.toString(),
 				description: description,
 				price: parseInt(price),
+				quantity: quantity? quantity : 0,
 				images: JSON.stringify(uploadedImages),
 				sellerId: user.id,
 				isApproved: false

@@ -2,6 +2,16 @@
 
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
+import {CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME} from '$env/static/private'
+import {v2 as cloudinary} from 'cloudinary';
+
+cloudinary.config({
+	cloud_name: CLOUDINARY_NAME,
+	api_key: CLOUDINARY_API_KEY ,
+	api_secret: CLOUDINARY_API_SECRET,
+})
+
+
 
 export async function GET({ params }) {
 	try {
@@ -81,6 +91,9 @@ export async function DELETE({ params, locals }) {
 	const product = await prisma.product.findUnique({
 		where: {
 			id: Number(params.id)
+		}, select: {
+			images: true,
+			sellerId: true
 		}
 	});
 	if (!product) return error(404, 'Product to delete not found');
@@ -88,7 +101,13 @@ export async function DELETE({ params, locals }) {
 		return error(401, 'Unauthorized: You must be the owner of the product to delete it');
 
 	try {
-		const result = await prisma.product.delete({
+		//delete images from cloudinary
+		const publicIds = JSON.parse(product.images).map(image => image.publicId);
+		const deletePromises = publicIds.map(publicId => cloudinary.uploader.destroy(publicId));
+		await Promise.all(deletePromises);
+
+		//delete product from database
+		const result = prisma.product.delete({
 			where: {
 				id: Number(params.id)
 			}
@@ -97,6 +116,47 @@ export async function DELETE({ params, locals }) {
 		if (result) return json(result, { status: 200 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		//@ts-ignore
+		return error(e.status, e.message);
 	}
 }
+
+
+
+
+// // Parse the old images
+// const oldImages = JSON.parse(product.images);
+
+// // Upload the new images to Cloudinary
+// const newImageFiles = locals.formData.getAll('newImages'); // This should be an array of new image files from the request
+// const uploadPromises = newImageFiles.map(imageFile => cloudinary.uploader.upload(imageFile.path));
+// const uploadedImages = await Promise.all(uploadPromises);
+
+// // Prepare the new images for the database
+// const newImages = uploadedImages.map(uploadedImage => ({
+//     url: uploadedImage.secure_url,
+//     publicId: uploadedImage.public_id
+// }));
+
+// // Remove the old images from the array
+// const oldImagePublicIds = locals.formData.getAll('oldImagePublicIds'); // This should be an array of publicIds of the images to delete
+// const remainingImages = oldImages.filter(image => !oldImagePublicIds.includes(image.publicId));
+
+// // Add the new images to the array
+// const updatedImages = [...remainingImages, ...newImages];
+
+// // Delete the old images from Cloudinary
+// const deletePromises = oldImagePublicIds.map(publicId => cloudinary.uploader.destroy(publicId));
+// await Promise.all(deletePromises);
+
+// // Update the product
+// const updatedProduct = await prisma.product.update({
+//     where: {
+//         id: Number(params.id)
+//     },
+//     data: {
+//         images: JSON.stringify(updatedImages),
+//     },
+// });
+
+// ...

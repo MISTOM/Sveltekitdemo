@@ -66,7 +66,7 @@ export async function PUT({ params, request, locals }) {
 				name: name || product.name,
 				description: description || product.description,
 				price: isNaN(price) ? product.price : price,
-				images: images || product.images,
+				images: images || product.images.toString(),
 				quantity: isNaN(quantity) ? product.quantity : quantity
 			}
 		});
@@ -84,6 +84,9 @@ export async function DELETE({ params, locals }) {
 	// admin can delete any product
 
 	if (!locals.user) return error(401, 'Unauthorized: You must be logged in to delete a product');
+
+	// You cant delete products that are on order Either cascade delete after checking if the order is delivered of set the foreign key to null.
+
 
 	//check if user is the owner of the product
 	const product = await prisma.product.findUnique({
@@ -103,14 +106,15 @@ export async function DELETE({ params, locals }) {
 		//delete images from cloudinary
 		const publicIds = JSON.parse(product.images).map((image) => image.publicId);
 		const deletePromises = publicIds.map((publicId) => cloudinary.uploader.destroy(publicId));
-		await Promise.all(deletePromises);
-
+		
 		//delete product from database
-		const result = prisma.product.delete({
+		const delPromise = prisma.product.delete({
 			where: {
-				id: Number(params.id)
+				id: parseInt(params.id)
 			}
 		});
+		const result = await Promise.all([delPromise, ...deletePromises]);
+		console.log(result)
 
 		if (result) return json(result, { status: 200 });
 	} catch (e) {

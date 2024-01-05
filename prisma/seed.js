@@ -1,6 +1,6 @@
 // prisma/seed.ts
-
-import prisma from '$lib/server/prisma';
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient();
 
 async function main() {
 	await prisma.role.create({

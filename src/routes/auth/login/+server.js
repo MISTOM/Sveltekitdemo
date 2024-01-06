@@ -6,11 +6,11 @@ import prisma from '$lib/server/prisma';
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ locals: { formData } }) {
-	const email = formData?.get('email');
-	const password = formData?.get('password');
+export async function POST({ request }) {
+	// const email = formData?.get('email');
+	// const password = formData?.get('password');
 
-	// const { email, password } = await request.json();
+	const { email, password } = await request.json();
 
 	if (!email) return error(400, 'Email is required');
 	if (!password) return error(400, 'Password is required');

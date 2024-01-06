@@ -4,13 +4,15 @@ import prisma from '$lib/server/prisma';
 
 // Sign up user
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ locals: { formData } }) {
-	const name = formData?.get('name')?.toString();
-	const email = formData?.get('email')?.toString();
-	const password = formData?.get('password')?.toString();
-	const accountNumber = formData?.get('accountNumber')?.toString();
-	const bankName = formData?.get('bankName')?.toString();
-	const branchName = formData?.get('branchName')?.toString();
+export async function POST({ request }) {
+	// const name = formData?.get('name')?.toString();
+	// const email = formData?.get('email')?.toString();
+	// const password = formData?.get('password')?.toString();
+	// const accountNumber = formData?.get('accountNumber')?.toString();
+	// const bankName = formData?.get('bankName')?.toString();
+	// const branchName = formData?.get('branchName')?.toString();
+
+	const { name, email, password, accountNumber, bankName, branchName } = await request.json();
 
 	if (!name || !email || !password) return error(400, 'Missing required fields');
 

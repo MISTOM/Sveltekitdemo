@@ -54,11 +54,10 @@ export const handle = async ({ event, resolve }) => {
 
 
 	const response = await resolve(event);
-	// response.headers.append('Access-Control-Allow-Origin', '*');
-	// response.headers.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-	// response.headers.append('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	response.headers.append('Access-Control-Allow-Origin', '*');
+	response.headers.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	response.headers.append('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-	// Bypass SvelteKit's CSRF protection for this specific origin
 
 	return response;
 };

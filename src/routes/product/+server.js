@@ -1,7 +1,7 @@
-import { v2 as cloudinary } from 'cloudinary';
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
+import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
 	cloud_name: CLOUDINARY_NAME,
@@ -52,12 +52,18 @@ export async function POST({ request, locals: { user, formData } }) {
 
 	//upload images to cloudinary
 	const uploadPromises = images.map(async (image) => {
+		try {
 		const buffer = await new Response(image).arrayBuffer();
 		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
 		const result = await cloudinary.uploader.upload(dataUrl);
 		return { url: result.secure_url, publicId: result.public_id };
+		} 
+		catch (e) {
+			console.log(e);
+			return error(500, 'Failed to Upload images');
+		}
 	});
-	const uploadedImages = await Promise.all(uploadPromises);
+    const uploadedImages = (await Promise.allSettled(uploadPromises)).filter(result => result.status === 'fulfilled').map(result => result.value);
 
 	// const { name, description, price, images } = await request.json();
 	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');

@@ -11,7 +11,7 @@ export default {
 	 */
 	sign(payload) {
 		//maxAge
-		const maxAge = 5 * 60; // 5 minutes
+		const maxAge = 30 * 60; // 30 minutes
 		const id = payload.id;
 		const role = payload.roleId;
 

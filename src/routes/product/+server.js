@@ -24,7 +24,10 @@ export async function GET({ locals: { user } }) {
 
 	try {
 		const result = await prisma.product.findMany({
-			where: whereClause
+			where: whereClause,
+			include: {
+				images: true
+			}
 		});
 
 		return json(result, { status: 200 });
@@ -44,45 +47,52 @@ export async function POST({ request, locals: { user, formData } }) {
 	if (user.role !== role[1])
 		return error(401, 'Unauthorized: You must be a seller to create a product');
 
-	const name = formData.get('name');
-	const description = formData.get('description')?.toString();
-	const price = formData.get('price');
+		// get from formdata entries
+	// const {name, price, images=[], description, quantity, } = Object.fromEntries(formData.entries());
+	const name = formData.get('name')?.toString();	
+	const price = formData.get('price')?.toString();
 	const images = formData.getAll('images');
-	const quantity = parseInt(formData.get('quantity'));
+	const description = formData.get('description')?.toString();
+	const quantity = formData.get('quantity')?.toString();
+
+	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
+
+
 
 	//upload images to cloudinary
 	const uploadPromises = images.map(async (image) => {
 		try {
-		const buffer = await new Response(image).arrayBuffer();
-		const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
-		const result = await cloudinary.uploader.upload(dataUrl);
-		return { url: result.secure_url, publicId: result.public_id };
-		} 
-		catch (e) {
+			const buffer = await new Response(image).arrayBuffer();
+			const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
+			const result = await cloudinary.uploader.upload(dataUrl);
+			return { url: result.secure_url, publicId: result.public_id };
+		} catch (e) {
 			console.log(e);
 			return error(500, 'Failed to Upload images');
 		}
 	});
-    const uploadedImages = (await Promise.allSettled(uploadPromises)).filter(result => result.status === 'fulfilled').map(result => result.value);
+	const uploadedImages = (await Promise.allSettled(uploadPromises)).filter((result) => result.status === 'fulfilled').map((result) => result.value);
 
 	// const { name, description, price, images } = await request.json();
-	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
 
 	try {
+		// create product and save images
 		const result = await prisma.product.create({
 			data: {
 				name: name.toString(),
 				description: description,
 				price: parseInt(price),
-				quantity: quantity ? quantity : 0,
-				images: JSON.stringify(uploadedImages),
+				quantity: parseInt(quantity) ? parseInt(quantity) : 0,
 				sellerId: user.id,
-				isApproved: false
+				isApproved: false,
+				images: {
+					create: uploadedImages
+				}
 			}
 		});
 		return json(result, { status: 201 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		return error(500, 'An error occurred while trying to create the product');
 	}
 }

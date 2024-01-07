@@ -20,6 +20,8 @@ model User {
   isApproved    Boolean    @default(false)
   products      Product[]
   orders ProductOnOrder[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt @default(now())
 }
 
 model Product {
@@ -27,12 +29,24 @@ model Product {
   name        String  @db.VarChar(255)
   description String?  @db.Text
   price       Int
-  images      String  @db.Text
   quantity   Int @default(0)
   sellerId    Int
   seller      User  @relation(fields: [sellerId], references: [id])
   isApproved  Boolean @default(false)
   orders      ProductOnOrder[]
+  images      Image[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
+}
+
+model Image {
+  id        Int     @id @default(autoincrement())
+  url       String  @db.Text
+  publicId  String  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 // there is no buyer account hence the buyerid is not needed
@@ -44,7 +58,8 @@ model Orders {
   totalPrice Int
   isDelivered Boolean @default(false)
   products ProductOnOrder[]
-
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model ProductOnOrder{
@@ -57,6 +72,8 @@ model ProductOnOrder{
   product Product @relation(fields: [productId], references: [id])
 
   @@id([orderId, productId])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Role {

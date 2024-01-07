@@ -24,7 +24,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 		});
 		let calculatedTotalPrice = 0;
 
-		// Check Quantity 
+		// Check Quantity
 		for (const orderProduct of products) {
 			const productOnOrder = dbProducts.find((dbProduct) => dbProduct.id === orderProduct.id);
 			if (!productOnOrder) return error(404, `Product ${orderProduct.id} not found`);
@@ -33,8 +33,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 					400,
 					`Not enough quantity of product ${(productOnOrder.id, productOnOrder.name)} available`
 				);
-				calculatedTotalPrice += productOnOrder.price * orderProduct.quantity; // Calculate total price
-
+			calculatedTotalPrice += productOnOrder.price * orderProduct.quantity; // Calculate total price
 		}
 
 		// Process Payment
@@ -105,7 +104,6 @@ export const deleteOrder = async (id) => {
 		return order;
 	});
 };
-
 
 //TODO 📌📌
 // /**

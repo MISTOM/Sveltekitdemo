@@ -4,6 +4,7 @@ import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
 import { v2 as cloudinary } from 'cloudinary';
+import { parse } from 'path';
 
 cloudinary.config({
 	cloud_name: CLOUDINARY_NAME,
@@ -44,33 +45,95 @@ export async function PUT({ params, request, locals }) {
 	//check if user is the owner of the product
 	const product = await prisma.product.findUnique({
 		where: {
-			id: Number(params.id)
-		}
+			id: parseInt(params.id)
+		},
+		select: { sellerId: true, images: true }
 	});
+
 	if (!product) return error(404, 'Product to update not found');
 	if (product?.sellerId !== locals.user.id)
 		return error(401, 'Unauthorized: You must be the owner of the product to update it');
 
-	// const { name, description, price, images, quantity } = await request.json();
 	const name = locals.formData.get('name')?.toString();
 	const description = locals.formData.get('description')?.toString();
 	const price = parseInt(locals.formData.get('price'));
-	const images = locals.formData.get('images')?.toString();
+	const images = locals.formData.getAll('images');
 	const quantity = parseInt(locals.formData.get('quantity'));
+	const toDeletePublicIds = locals.formData.getAll('toDeletePublicIds'); // This should be an array of publicIds of the images to delete: example ['publicId1', 'publicId2']
+
 	try {
-		const result = await prisma.product.update({
-			where: {
-				id: Number(params.id)
-			},
-			data: {
-				name: name || product.name,
-				description: description || product.description,
-				price: isNaN(price) ? product.price : price,
-				images: images || product.images.toString(),
-				quantity: isNaN(quantity) ? product.quantity : quantity
+		if (toDeletePublicIds?.length === 0 && images?.length === 0) {
+			const updatedProduct = await prisma.product.update({
+				where: { id: parseInt(params.id) },
+				data: {
+					name: name ? name : undefined,
+					description: description ? description : undefined,
+					price: price ? price : undefined,
+					quantity: quantity ? quantity : undefined
+				}
+			});
+
+			return json(updatedProduct, { status: 201 });
+		}
+
+		// Parse the old images
+		const oldImages = JSON.parse(product.images);
+
+		// Upload the new images to Cloudinary
+		const uploadPromises = images.map(async (image) => {
+			try {
+				const buffer = await new Response(image).arrayBuffer();
+				const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
+				const result = await cloudinary.uploader.upload(dataUrl);
+				return { url: result.secure_url, publicId: result.public_id };
+			} catch (e) {
+				console.log(e);
+				return error(500, 'Failed to Upload images');
 			}
 		});
-		return json(result, { status: 201 });
+		const uploadedImages = (await Promise.allSettled(uploadPromises))
+			.filter((result) => result.status === 'fulfilled')
+			.map((result) => result.value);
+
+		console.log(toDeletePublicIds);
+
+		// Delete the old images from Cloudinary
+		const deletePromises = toDeletePublicIds.map((publicId) =>
+			cloudinary.uploader
+				.destroy(publicId)
+				.then((result) => {
+					console.log(`Deleted image with publicId ${publicId}: ${JSON.stringify(result)}`);
+					return result;
+				})
+				.catch((error) => {
+					console.error(`Failed to delete image with publicId ${publicId}: ${error}`);
+				})
+		);
+		await Promise.all(deletePromises);
+
+		// Remove the old images from the array
+		const remainingImages = oldImages.filter(
+			(image) => !toDeletePublicIds.includes(image.publicId)
+		);
+		console.log(`Remaining images: ${remainingImages}`);
+
+		// Add the new images to the array
+		const updatedImages = [...remainingImages, ...uploadedImages];
+
+		// Update the product
+		const updatedProduct = await prisma.product.update({
+			where: {
+				id: parseInt(params.id)
+			},
+			data: {
+				name: name ? name : undefined,
+				description: description ? description : undefined,
+				price: price ? price : undefined,
+				quantity: quantity ? quantity : undefined,
+				images: updatedImages.length > 0 ? JSON.stringify(updatedImages) : undefined
+			}
+		});
+		return json(updatedProduct, { status: 201 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });
@@ -87,11 +150,10 @@ export async function DELETE({ params, locals }) {
 
 	// You cant delete products that are on order Either cascade delete after checking if the order is delivered of set the foreign key to null.
 
-
 	//check if user is the owner of the product
 	const product = await prisma.product.findUnique({
 		where: {
-			id: Number(params.id)
+			id: parseInt(params.id)
 		},
 		select: {
 			images: true,
@@ -106,7 +168,7 @@ export async function DELETE({ params, locals }) {
 		//delete images from cloudinary
 		const publicIds = JSON.parse(product.images).map((image) => image.publicId);
 		const deletePromises = publicIds.map((publicId) => cloudinary.uploader.destroy(publicId));
-		
+
 		//delete product from database
 		const delPromise = prisma.product.delete({
 			where: {
@@ -114,7 +176,7 @@ export async function DELETE({ params, locals }) {
 			}
 		});
 		const result = await Promise.all([delPromise, ...deletePromises]);
-		console.log(result)
+		console.log(result);
 
 		if (result) return json(result, { status: 200 });
 	} catch (e) {

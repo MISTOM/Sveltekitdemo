@@ -10,12 +10,15 @@ cloudinary.config({
 });
 
 /**
- * 
- * @param {App.Locals} locals 
+ *
+ * @param {App.Locals} locals
  * @returns {Promise<import('@prisma/client').Role[]>}
  */
 async function getRoles(locals) {
-	if (!locals.session.roles) { console.log("Querying db for roles"); locals.session.roles = await prisma.role.findMany()};
+	if (!locals.session.roles) {
+		console.log('Querying db for roles');
+		locals.session.roles = await prisma.role.findMany();
+	}
 	return locals.session.roles;
 }
 
@@ -70,7 +73,7 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 
 	//upload images to cloudinary
 	/**
-	 * 
+	 *
 	 */
 	// @ts-ignore
 	const uploadPromises = images.map(async (image) => {

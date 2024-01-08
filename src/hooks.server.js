@@ -10,9 +10,9 @@ export const handle = async ({ event, resolve }) => {
 
 	console.log(origin);
 
-	//Turned of csrf protection so I only need to check if origin is allowed
+	//Turned off csrf protection so I only need to check if origin is allowed
 
-	if (!ALLOWED_ORIGINS.includes(origin)) {
+	if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
 		return new Response('Forbidden', { status: 403 });
 	}
 
@@ -40,6 +40,7 @@ export const handle = async ({ event, resolve }) => {
 			console.log(e.message);
 		}
 	}
+	event.locals.session = {};
 
 	const contentType = event.request.headers.get('content-type');
 	if (

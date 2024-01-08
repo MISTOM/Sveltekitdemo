@@ -9,20 +9,31 @@ cloudinary.config({
 	api_secret: CLOUDINARY_API_SECRET
 });
 
+/**
+ * 
+ * @param {App.Locals} locals 
+ * @returns {Promise<import('@prisma/client').Role[]>}
+ */
+async function getRoles(locals) {
+	if (!locals.session.roles) { console.log("Querying db for roles"); locals.session.roles = await prisma.role.findMany()};
+	return locals.session.roles;
+}
+
 // Get all products
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ locals: { user } }) {
-	const roles = await prisma.role.findMany();
+export async function GET({ locals }) {
+	const roles = await getRoles(locals);
 	const role = roles.map((role) => role.id);
 
 	let whereClause;
-	if (user) {
-		whereClause = user.role === role[0] ? {} : { sellerId: user.id };
+	if (locals.user) {
+		whereClause = locals.user.role === role[0] ? {} : { sellerId: locals.user.id };
 	} else {
-		whereClause = { isApproved: true };
+		whereClause = { isApproved: true, images: { some: {} } };
 	}
 
 	try {
+		// Only return products with images and approved
 		const result = await prisma.product.findMany({
 			where: whereClause,
 			include: {
@@ -37,11 +48,11 @@ export async function GET({ locals: { user } }) {
 }
 
 //Create product
-export async function POST({ request, locals: { user, formData } }) {
+export async function POST({ request, locals: { user, formData }, locals }) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
-	const roles = await prisma.role.findMany();
+	const roles = await getRoles(locals);
 	const role = roles.map((role) => role.id);
 
 	if (user.role !== role[1])
@@ -58,6 +69,10 @@ export async function POST({ request, locals: { user, formData } }) {
 	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
 
 	//upload images to cloudinary
+	/**
+	 * 
+	 */
+	// @ts-ignore
 	const uploadPromises = images.map(async (image) => {
 		try {
 			const buffer = await new Response(image).arrayBuffer();
@@ -71,6 +86,7 @@ export async function POST({ request, locals: { user, formData } }) {
 	});
 	const uploadedImages = (await Promise.allSettled(uploadPromises))
 		.filter((result) => result.status === 'fulfilled')
+		// @ts-ignore
 		.map((result) => result.value);
 
 	// const { name, description, price, images } = await request.json();
@@ -82,7 +98,7 @@ export async function POST({ request, locals: { user, formData } }) {
 				name: name.toString(),
 				description: description,
 				price: parseInt(price),
-				quantity: parseInt(quantity) ? parseInt(quantity) : 0,
+				quantity: quantity ? parseInt(quantity) : 0,
 				sellerId: user.id,
 				isApproved: false,
 				images: {

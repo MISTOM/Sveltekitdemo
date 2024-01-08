@@ -47,17 +47,15 @@ export async function POST({ request, locals: { user, formData } }) {
 	if (user.role !== role[1])
 		return error(401, 'Unauthorized: You must be a seller to create a product');
 
-		// get from formdata entries
+	// get from formdata entries
 	// const {name, price, images=[], description, quantity, } = Object.fromEntries(formData.entries());
-	const name = formData.get('name')?.toString();	
+	const name = formData.get('name')?.toString();
 	const price = formData.get('price')?.toString();
 	const images = formData.getAll('images');
 	const description = formData.get('description')?.toString();
 	const quantity = formData.get('quantity')?.toString();
 
 	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
-
-
 
 	//upload images to cloudinary
 	const uploadPromises = images.map(async (image) => {
@@ -71,7 +69,9 @@ export async function POST({ request, locals: { user, formData } }) {
 			return error(500, 'Failed to Upload images');
 		}
 	});
-	const uploadedImages = (await Promise.allSettled(uploadPromises)).filter((result) => result.status === 'fulfilled').map((result) => result.value);
+	const uploadedImages = (await Promise.allSettled(uploadPromises))
+		.filter((result) => result.status === 'fulfilled')
+		.map((result) => result.value);
 
 	// const { name, description, price, images } = await request.json();
 

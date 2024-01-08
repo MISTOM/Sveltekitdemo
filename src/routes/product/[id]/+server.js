@@ -4,7 +4,6 @@ import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
 import { v2 as cloudinary } from 'cloudinary';
-import { parse } from 'path';
 
 cloudinary.config({
 	cloud_name: CLOUDINARY_NAME,
@@ -36,7 +35,7 @@ export async function PUT({ params, request, locals }) {
 	//check if user is logged in
 	if (!locals.user) return error(401, 'Unauthorized: You must be logged in to update a product');
 
-	//check if user is a seller ????
+	//check if user is a seller
 	const role = await prisma.role.findMany();
 	const roleId = role.map((role) => role.id);
 	if (locals.user.role !== roleId[1])
@@ -47,7 +46,7 @@ export async function PUT({ params, request, locals }) {
 		where: {
 			id: parseInt(params.id)
 		},
-		select: { sellerId: true, images: true }
+		include: { images: true }
 	});
 
 	if (!product) return error(404, 'Product to update not found');
@@ -77,48 +76,46 @@ export async function PUT({ params, request, locals }) {
 		}
 
 		// Parse the old images
-		const oldImages = JSON.parse(product.images);
+		// const oldImages = JSON.parse(product.images);
 
-		// Upload the new images to Cloudinary
-		const uploadPromises = images.map(async (image) => {
-			try {
-				const buffer = await new Response(image).arrayBuffer();
-				const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
-				const result = await cloudinary.uploader.upload(dataUrl);
-				return { url: result.secure_url, publicId: result.public_id };
-			} catch (e) {
-				console.log(e);
-				return error(500, 'Failed to Upload images');
-			}
-		});
-		const uploadedImages = (await Promise.allSettled(uploadPromises))
-			.filter((result) => result.status === 'fulfilled')
-			.map((result) => result.value);
+		console.log("Formdata Images",images)
 
-		console.log(toDeletePublicIds);
+		// Remove the old images from the array and map to get only the publicIds
+		// const remainingImages = oldImages.filter(
+		// 	(image) => !toDeletePublicIds.includes(image.publicId)
+		// ).map(image => ({url: image.url, publicId: image.publicId}));
 
-		// Delete the old images from Cloudinary
-		const deletePromises = toDeletePublicIds.map((publicId) =>
-			cloudinary.uploader
-				.destroy(publicId)
-				.then((result) => {
-					console.log(`Deleted image with publicId ${publicId}: ${JSON.stringify(result)}`);
-					return result;
-				})
-				.catch((error) => {
-					console.error(`Failed to delete image with publicId ${publicId}: ${error}`);
-				})
-		);
-		await Promise.all(deletePromises);
+		// Delete the old images from Cloudinary if there are toDeletePublicIds
+		if (toDeletePublicIds && toDeletePublicIds.length > 0) {
+			const deletePromises = toDeletePublicIds.map((publicId) =>
+				cloudinary.uploader.destroy(publicId, {invalidate: true})
+			);
+			await Promise.all(deletePromises).catch((e) => { return error(500, `Failed to delete images${e}`)});
+		}
 
-		// Remove the old images from the array
-		const remainingImages = oldImages.filter(
-			(image) => !toDeletePublicIds.includes(image.publicId)
-		);
-		console.log(`Remaining images: ${remainingImages}`);
+		// Insert new images to Cloudinary if there are images
 
-		// Add the new images to the array
-		const updatedImages = [...remainingImages, ...uploadedImages];
+		/**
+		 * @type {Array<{url: string, publicId: string}>}
+		 */
+		let uploadedImages = [];
+		if (images && images.length > 0) {
+			const uploadPromises = images.map(async (image) => {
+				try {
+					const buffer = await new Response(image).arrayBuffer();
+					const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
+					const result = await cloudinary.uploader.upload(dataUrl);
+					return { url: result.secure_url, publicId: result.public_id };
+				} catch (e) {
+					console.log(e);
+					return error(500, `Failed to Upload images${e}`);
+				}
+			});
+
+			uploadedImages = (await Promise.allSettled(uploadPromises))
+				.filter((result) => result.status === 'fulfilled')
+				.map((result) => result.value);
+		}
 
 		// Update the product
 		const updatedProduct = await prisma.product.update({
@@ -130,13 +127,33 @@ export async function PUT({ params, request, locals }) {
 				description: description ? description : undefined,
 				price: price ? price : undefined,
 				quantity: quantity ? quantity : undefined,
-				images: updatedImages.length > 0 ? JSON.stringify(updatedImages) : undefined
 			}
 		});
+
+		// Update the images of the product
+		const deletedImages = await prisma.image.deleteMany({
+			where: {
+				productId: parseInt(params.id),
+				publicId: {in: toDeletePublicIds}
+			},
+		});
+
+		// Prepare the new images for the database
+		const uploadedImagesWithProductId = uploadedImages.map((image) => ({
+			...image,
+			productId: parseInt(params.id)
+		}));
+
+		const newImages = await prisma.image.createMany({
+			data: uploadedImagesWithProductId
+		});
+
+		console.log('newImages', newImages, 'deletedImages', deletedImages);
+
 		return json(updatedProduct, { status: 201 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		return error(500, 'An error occurred while trying to update the product');
 	}
 }
 

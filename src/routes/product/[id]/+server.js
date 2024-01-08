@@ -210,11 +210,18 @@ export async function DELETE({ params, locals }) {
 		const publicIds = product.images.map((image) => image.publicId);
 		const deleteImagePromises = publicIds.map((publicId) => cloudinary.uploader.destroy(publicId));
 
+		//delete images from database
+		// const delImagesPromise = prisma.image.deleteMany({
+		// 	where: {
+		// 		productId: parseInt(params.id)
+		// 	}
+		// });
+
 		//delete product from database
 		const delProductPromise = prisma.product.delete({
 			where: {
 				id: parseInt(params.id)
-			}
+			}, include: {images: true}
 		});
 		const result = await Promise.all([...deleteImagePromises, delProductPromise]);
 		console.log(result);

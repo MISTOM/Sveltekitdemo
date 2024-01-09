@@ -24,9 +24,11 @@ async function getRoles(locals) {
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ locals }) {
+export async function GET({ url,locals }) {
 	const roles = await getRoles(locals);
 	const role = roles.map((role) => role.id);
+
+
 
 	let whereClause;
 	if (locals.user) {
@@ -36,17 +38,41 @@ export async function GET({ locals }) {
 	}
 
 	try {
+
+		//Add pagination
+		const pageParam = url.searchParams.get('page');
+		const limitParam = url.searchParams.get('limit');
+		const orderBy = url.searchParams.get('orderBy') === 'asc'? 'asc' : 'desc';
+
+		const page = pageParam ? parseInt(pageParam) : 1;
+		const limit = limitParam ? parseInt(limitParam) : 10;
+		const skip = (page - 1) * limit;
+		
+
 		// Only return products with images and approved
-		const result = await prisma.product.findMany({
+		const productPromise = prisma.product.findMany({
+			skip,
+			take: limit,
+			orderBy: { createdAt: orderBy },
 			where: whereClause,
 			include: {
 				images: true
 			}
 		});
+		const countPromise =  prisma.product.count({ where: whereClause });
+
+		const [products, productCount] = await Promise.all([productPromise, countPromise]);
+
+		const result = {
+			products,
+			totalPages: Math.ceil(productCount / limit),
+			currentPage: page,
+			totalProducts: productCount
+		};
 
 		return json(result, { status: 200 });
-	} catch (error) {
-		return json(error, { status: 500 });
+	} catch (e) {
+		return error(500, `An error occurred while trying to get the products${e}`);
 	}
 }
 

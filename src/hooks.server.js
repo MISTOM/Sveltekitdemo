@@ -36,8 +36,7 @@ export const handle = async ({ event, resolve }) => {
 			event.locals.user = jwt.verify(token, SECRET_KEY);
 			console.log('Verified token', event.locals.user);
 		} catch (e) {
-			//@ts-ignore
-			console.log(e.message);
+			console.log("Unverified User:",e);
 		}
 	}
 	event.locals.session = {};

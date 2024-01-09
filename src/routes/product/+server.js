@@ -75,7 +75,6 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 	/**
 	 *
 	 */
-	// @ts-ignore
 	const uploadPromises = images.map(async (image) => {
 		try {
 			const buffer = await new Response(image).arrayBuffer();

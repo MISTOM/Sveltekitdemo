@@ -20,8 +20,6 @@ async function getRoles(locals) {
 	if (!locals.session.roles) locals.session.roles = await prisma.role.findMany();
 	return locals.session.roles;
 }
-
-// @ts-ignore
 export async function GET({ params }) {
 	try {
 		const result = await prisma.product.findUnique({
@@ -40,7 +38,6 @@ export async function GET({ params }) {
 }
 
 // Update product by id
-// @ts-ignore
 export async function PUT({ params, request, locals }) {
 	if (!params.id) return json({ message: 'Product ID not provided to update' }, { status: 400 });
 
@@ -106,7 +103,6 @@ export async function PUT({ params, request, locals }) {
 		 */
 		let uploadedImages = [];
 		if (images && images.length > 0) {
-			// @ts-ignore
 			const uploadPromises = images.map(async (image) => {
 				try {
 					const buffer = await new Response(image).arrayBuffer();
@@ -175,7 +171,6 @@ export async function PUT({ params, request, locals }) {
 }
 
 // Delete product by id
-// @ts-ignore
 export async function DELETE({ params, locals }) {
 	if (!params.id) return error(404, 'Product ID not provided to delete');
 	// seller can only delete their own product ✓✓

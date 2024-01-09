@@ -79,7 +79,7 @@ export async function DELETE({ params }) {
 		return json(order, { status: 200 });
 	} catch (e) {
 		console.log(e);
-		//@ts-ignore
-		return error(e.status, e.body.message);
+
+		return error(500, `Failed to delete order${e}`);
 	}
 }

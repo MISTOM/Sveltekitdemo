@@ -89,7 +89,6 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
  * @param {Number} id Order Id
  */
 export const deleteOrder = async (id) => {
-	// @ts-ignore
 	const result = prisma.$transaction(async (prisma) => {
 		await prisma.productOnOrder.deleteMany({
 			where: {

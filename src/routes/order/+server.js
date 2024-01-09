@@ -14,18 +14,16 @@ export async function GET({ url, locals }) {
 
 	let whereClause = {};
 
-	// @ts-ignore
 	if (locals?.user?.role === roleId[0]) {
 		// If user is an admin, get all orders
 		whereClause = isDeliveredParam !== null ? { order: { isDelivered } } : {};
-		// @ts-ignore
 	} else if (locals?.user?.role === roleId[1]) {
 		// If user is a seller, get only his orders
 		whereClause =
 			isDeliveredParam !== null
-				? // @ts-ignore
+				?
 					{ sellerId: locals.user.id, order: { isDelivered } }
-				: // @ts-ignore
+				:
 					{ sellerId: locals.user.id };
 	} else {
 		return error(401, 'Unauthorized');
@@ -93,7 +91,6 @@ export async function GET({ url, locals }) {
 }
 
 // Create order
-// @ts-ignore
 export async function POST({ request }) {
 	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
@@ -101,7 +98,6 @@ export async function POST({ request }) {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 		return json(order, { status: 200 });
 	} catch (e) {
-		// @ts-ignore
-		return error(e.status, e.body.message);
+		return error(500, `An error occurred while trying to create the order ${e}`);
 	}
 }

@@ -1,13 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_NAME } from '$env/static/private';
-import { v2 as cloudinary } from 'cloudinary';
+import cloudinary from '$lib/server/cloudinary';
 
-cloudinary.config({
-	cloud_name: CLOUDINARY_NAME,
-	api_key: CLOUDINARY_API_KEY,
-	api_secret: CLOUDINARY_API_SECRET
-});
 
 /**
  *
@@ -45,7 +39,7 @@ export async function GET({ url,locals }) {
 		const orderBy = url.searchParams.get('orderBy') === 'asc'? 'asc' : 'desc';
 
 		const page = pageParam ? parseInt(pageParam) : 1;
-		const limit = limitParam ? parseInt(limitParam) : 10;
+		const limit = limitParam ? parseInt(limitParam) : 100;
 		const skip = (page - 1) * limit;
 		
 

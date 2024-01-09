@@ -39,6 +39,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 		// Process Payment
 		//if Success...
 
+
 		return await prisma.$transaction(async (prisma) => {
 			//Update Quantities
 			for (const orderProduct of products) {
@@ -89,7 +90,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
  * @param {Number} id Order Id
  */
 export const deleteOrder = async (id) => {
-	const result = prisma.$transaction(async (prisma) => {
+	const result = await prisma.$transaction(async (prisma) => {
 		await prisma.productOnOrder.deleteMany({
 			where: {
 				orderId: id

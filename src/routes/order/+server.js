@@ -102,13 +102,15 @@ export async function GET({ url, locals }) {
 
 // Create order
 export async function POST({ request }) {
+	
 	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
 	if (!buyerName) return error(400, 'Buyer name is required');
 	if (!buyerEmail) return error(400, 'Buyer email is required');
 	if (!buyerPhone) return error(400, 'Buyer phone is required');
-	if (!products) return error(400, 'Products are required');
+	if (!products || products?.length <= 0) return error(400, 'Products are required');
 
+	if (!products.every(product => product.id && product.quantity)) return error(400, 'Each product must have an id an quantity');
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 		return json(order, { status: 200 });

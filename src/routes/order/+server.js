@@ -104,6 +104,11 @@ export async function GET({ url, locals }) {
 export async function POST({ request }) {
 	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
+	if (!buyerName) return error(400, 'Buyer name is required');
+	if (!buyerEmail) return error(400, 'Buyer email is required');
+	if (!buyerPhone) return error(400, 'Buyer phone is required');
+	if (!products) return error(400, 'Products are required');
+
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 		return json(order, { status: 200 });

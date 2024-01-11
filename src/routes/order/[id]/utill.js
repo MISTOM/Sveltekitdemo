@@ -39,7 +39,6 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 		// Process Payment
 		//if Success...
 
-
 		return await prisma.$transaction(async (prisma) => {
 			//Update Quantities
 			for (const orderProduct of products) {

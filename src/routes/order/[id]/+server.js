@@ -19,7 +19,7 @@ export async function GET({ params }) {
 				}
 			}
 		});
-		if (!result) return json({ message: 'Order not found' }, { status: 404 });
+		if (!result) return error(404, 'Order not found');
 		const grouped = {
 			...result,
 			products: result.products.map((productOnOrder) => ({
@@ -32,7 +32,7 @@ export async function GET({ params }) {
 		return json(grouped, { status: 200 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		return error(500, `Failed to get order ${e}`);
 	}
 }
 

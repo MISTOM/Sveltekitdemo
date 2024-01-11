@@ -1,7 +1,16 @@
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 import cloudinary from '$lib/server/cloudinary';
+// import MailService from '$lib/server/MailService';
 
+// const msg = {
+// 	to: 'kigardetom2001@gmail.com',
+// 	subject: 'Test Email',
+// 	text: 'This is a test email',
+// 	html: '<h1>This is a test email</h1>'
+// };
+
+// MailService.sendMail(msg);
 
 /**
  *
@@ -18,11 +27,9 @@ async function getRoles(locals) {
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url,locals }) {
+export async function GET({ url, locals }) {
 	const roles = await getRoles(locals);
 	const role = roles.map((role) => role.id);
-
-
 
 	let whereClause;
 	if (locals.user) {
@@ -32,16 +39,14 @@ export async function GET({ url,locals }) {
 	}
 
 	try {
-
 		//Add pagination
 		const pageParam = url.searchParams.get('page');
 		const limitParam = url.searchParams.get('limit');
-		const orderBy = url.searchParams.get('orderBy') === 'asc'? 'asc' : 'desc';
+		const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
 
 		const page = pageParam ? parseInt(pageParam) : 1;
 		const limit = limitParam ? parseInt(limitParam) : 100;
 		const skip = (page - 1) * limit;
-		
 
 		// Only return products with images and approved
 		const productPromise = prisma.product.findMany({
@@ -53,7 +58,7 @@ export async function GET({ url,locals }) {
 				images: true
 			}
 		});
-		const countPromise =  prisma.product.count({ where: whereClause });
+		const countPromise = prisma.product.count({ where: whereClause });
 
 		const [products, productCount] = await Promise.all([productPromise, countPromise]);
 

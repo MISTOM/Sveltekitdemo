@@ -9,6 +9,15 @@ export async function GET({ url, locals }) {
 	const isDeliveredParam = url.searchParams.get('isDelivered');
 	const isDelivered = isDeliveredParam == 'true' ? true : false;
 
+	// Add pagination
+	const pageParam = url.searchParams.get('page');
+	const limitParam = url.searchParams.get('limit');
+	const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
+
+	const page = pageParam ? parseInt(pageParam) : 1;
+	const limit = limitParam ? parseInt(limitParam) : 100;
+	const skip = (page - 1) * limit;
+
 	const roles = await prisma.role.findMany();
 	const roleId = roles.map((role) => role.id);
 
@@ -21,10 +30,8 @@ export async function GET({ url, locals }) {
 		// If user is a seller, get only his orders
 		whereClause =
 			isDeliveredParam !== null
-				?
-					{ sellerId: locals.user.id, order: { isDelivered } }
-				:
-					{ sellerId: locals.user.id };
+				? { sellerId: locals.user.id, order: { isDelivered } }
+				: { sellerId: locals.user.id };
 	} else {
 		return error(401, 'Unauthorized');
 	}
@@ -32,6 +39,9 @@ export async function GET({ url, locals }) {
 	try {
 		const result = await prisma.productOnOrder.findMany({
 			where: whereClause,
+			skip,
+			take: limit,
+			orderBy: { createdAt: orderBy },
 			include: {
 				order: true,
 				product: true

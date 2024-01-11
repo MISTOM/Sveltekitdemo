@@ -37,7 +37,7 @@ export const handle = async ({ event, resolve }) => {
 			console.log('Verified token', event.locals.user);
 		} catch (e) {
 			//@ts-ignore
-			console.log("Unverified User:",e.message);
+			console.log('Unverified User:', e.message);
 		}
 	}
 	event.locals.session = {};

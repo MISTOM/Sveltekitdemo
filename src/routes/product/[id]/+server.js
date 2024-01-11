@@ -209,7 +209,8 @@ export async function DELETE({ params, locals }) {
 		const delProductPromise = prisma.product.delete({
 			where: {
 				id: parseInt(params.id)
-			}, include: {images: true}
+			},
+			include: { images: true }
 		});
 		const result = await Promise.all([...deleteImagePromises, delProductPromise]);
 		console.log(result);

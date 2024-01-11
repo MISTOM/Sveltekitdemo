@@ -5,7 +5,7 @@ import prisma from '$lib/server/prisma';
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
 	const { email } = await request.json();
-    if (!email) return error(400, 'Email is required');
+	if (!email) return error(400, 'Email is required');
 
 	try {
 		const orders = await prisma.orders.findMany({
@@ -19,9 +19,9 @@ export async function POST({ request }) {
 				}
 			}
 		});
-        console.log(orders)
+		console.log(orders);
 
-        if (!orders) return error(404, 'Order not found');
+		if (!orders) return error(404, 'Order not found');
 
 		const result = orders.map((order) => ({
 			orderId: order.id,

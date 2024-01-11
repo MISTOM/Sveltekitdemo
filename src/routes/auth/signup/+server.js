@@ -1,6 +1,9 @@
 import { error, json } from '@sveltejs/kit';
 import auth from '$lib/server/auth';
 import prisma from '$lib/server/prisma';
+import { SECRET_KEY } from '$env/static/private';
+import jwt from 'jsonwebtoken';
+import MailService from '$lib/server/MailService';
 
 // Sign up user
 /** @type {import('./$types').RequestHandler} */
@@ -19,6 +22,7 @@ export async function POST({ request }) {
 	if (userExists) return error(400, 'User already exists');
 
 	try {
+		//RoleId 1 is admin, 2 is seller
 		const roles = await prisma.role.findMany();
 		const role = roles.map((role) => role.id);
 
@@ -35,10 +39,10 @@ export async function POST({ request }) {
 		});
 
 		// console.log('User here', user);
+		// Set up email verification when the user signs up
+		await MailService.sendVerificationEmail(user.email);
 
-		const token = auth.sign(user);
-
-		return json({ ...user, token }, { status: 201 });
+		return json({}, { status: 201 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

@@ -18,6 +18,7 @@ model User {
   roleId        Int
   role          Role      @relation(fields: [roleId], references: [id])
   isApproved    Boolean    @default(false)
+  isVerified    Boolean    @default(false)
   products      Product[]
   orders ProductOnOrder[]
   createdAt     DateTime   @default(now())

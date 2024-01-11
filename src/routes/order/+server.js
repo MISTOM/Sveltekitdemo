@@ -102,7 +102,6 @@ export async function GET({ url, locals }) {
 
 // Create order
 export async function POST({ request }) {
-	
 	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
 	if (!buyerName) return error(400, 'Buyer name is required');
@@ -110,7 +109,8 @@ export async function POST({ request }) {
 	if (!buyerPhone) return error(400, 'Buyer phone is required');
 	if (!products || products?.length <= 0) return error(400, 'Products are required');
 
-	if (!products.every(product => product.id && product.quantity)) return error(400, 'Each product must have an id an quantity');
+	if (!products.every((product) => product.id && product.quantity))
+		return error(400, 'Each product must have an id an quantity');
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 		return json(order, { status: 200 });

@@ -3,9 +3,6 @@
 // and return the token. client is using Authorization header to send the token so we need to send it back
 import auth from '$lib/server/auth';
 import prisma from '$lib/server/prisma';
-import jwt from 'jsonwebtoken';
-import MailService from '$lib/server/MailService'
-import { SECRET_KEY } from '$env/static/private';
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
@@ -28,16 +25,16 @@ export async function POST({ request }) {
 				email: email.toString()
 			}
 		});
+
+		if (!user) return error(404, 'User not found');
+		if (!user.isVerified)
+			return error(401, `Your account is not verified yet. Please check your email: ${email}`);
 	} catch (e) {
 		console.error(e);
 		return error(500, 'An error occurred while trying to find the user');
 	}
-	if (!user) return error(404, 'User not found');
 
 	// const _token = jwt.sign({email}, SECRET_KEY, {expiresIn: 10 * 60}  );
-
-
-	
 
 	await auth.compare(password.toString(), user.password);
 	const token = auth.sign(user);

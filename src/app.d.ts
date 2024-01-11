@@ -14,7 +14,10 @@ declare global {
 			formData: FormData;
 		}
 	}
-	// interface Error {}
+	// interface Error {
+	// 	status?: number,
+	// 	message?: string
+	// }
 	// interface Locals {}
 	// interface PageData {}
 	// interface Platform {}

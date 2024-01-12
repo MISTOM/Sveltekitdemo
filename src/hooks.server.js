@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
  * @type import('@sveltejs/kit').Handle
  */
 export const handle = async ({ event, resolve }) => {
-	const ALLOWED_ORIGINS = ['http://localhost:5174', 'https://sneaker-empire-ten.vercel.app/'];
+	const ALLOWED_ORIGINS = ['http://localhost:5174', 'https://sneaker-empire-ten.vercel.app'];
 	const origin = event.request.headers.get('origin');
 
 	console.log(origin);

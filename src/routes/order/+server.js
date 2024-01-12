@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import { createOrder } from './[id]/utill';
+import MailService from '$lib/server/MailService';
+import { createOrder } from './[id]/util';
 
 // Get all orders with isDelivered = true/false
 
@@ -48,7 +49,7 @@ export async function GET({ url, locals }) {
 			}
 		});
 
-		/** Type Defination of the Product
+		/** Type Definition of the Product
 		 * @typedef {Object} Product
 		 * @property {number} id
 		 * @property {string} name
@@ -60,7 +61,7 @@ export async function GET({ url, locals }) {
 		 * @property {boolean} isApproved
 		 */
 
-		/**Type Defination of the Order
+		/**Type Definition of the Order
 		 * @typedef {Object} Order
 		 * @property {number} orderId
 		 * @property {string} buyerName
@@ -104,17 +105,24 @@ export async function GET({ url, locals }) {
 export async function POST({ request }) {
 	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
 
-	if (!buyerName) return error(400, 'Buyer name is required');
-	if (!buyerEmail) return error(400, 'Buyer email is required');
-	if (!buyerPhone) return error(400, 'Buyer phone is required');
-	if (!products || products?.length <= 0) return error(400, 'Products are required');
-
-	if (!products.every((product) => product.id && product.quantity))
-		return error(400, 'Each product must have an id an quantity');
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
+
+		//send email to the buyer displaying the order details: order id, total price, products ordered
+		// const mail = {
+		// 	to: buyerEmail,
+		// 	subject: 'Order details',
+		// 	text: `Your order was created successfully. Your order id is ${order.id}. Total price is ${order.totalPrice}`,
+		// 	html: `<h3>Your order was created successfully</h3><br><p>Your order id is ${order.id}. Total price is ${order.totalPrice}</p><br>`
+		// };
+		// await MailService.sendMail(mail);
+
 		return json(order, { status: 200 });
 	} catch (e) {
-		return error(500, `An error occurred while trying to create the order ${e}`);
+		console.log(e);
+		//@ts-ignore
+		if (e.status !== 500) return error(e.status, e.body);
+		console.log(e);
+		return error(500, 'Internal server error');
 	}
 }

@@ -26,6 +26,10 @@ export default {
 		await sendgrid.send(msg);
 	},
 
+	/**
+	 * Sends a verification email to the user
+	 * @param {String} email
+	 */
 	async sendVerificationEmail(email) {
 		const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: 10 * 60 });
 		const link = `${BASE_URL}/verify?token=${token}`;
@@ -37,4 +41,14 @@ export default {
 		};
 		await this.sendMail(mail);
 	}
+
+	// async sendOrderEmail(emails, buyerName, buyerEmail, buyerPhone, orderId) {
+	// 	const mail = {
+	// 		to: emails,
+	// 		subject: 'New order',
+	// 		text: `A new order was created by ${buyerName}. Order id is ${orderId}. Buyer email is ${buyerEmail}. Buyer phone is ${buyerPhone}`,
+	// 		html: `<h3>A new order was created by ${buyerName}</h3><br><p>Order id is ${orderId}. Buyer email is ${buyerEmail}. Buyer phone is ${buyerPhone}</p><br>`
+	// 	};
+	// 	await this.sendMail(mail);
+	// }
 };

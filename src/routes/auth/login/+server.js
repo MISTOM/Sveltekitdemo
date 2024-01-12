@@ -31,7 +31,8 @@ export async function POST({ request }) {
 			return error(401, `Your account is not verified yet. Please check your email: ${email}`);
 	} catch (e) {
 		console.error(e);
-		return error(500, 'An error occurred while trying to find the user');
+		// @ts-ignore
+		return error(e.status, e.body);
 	}
 
 	// const _token = jwt.sign({email}, SECRET_KEY, {expiresIn: 10 * 60}  );

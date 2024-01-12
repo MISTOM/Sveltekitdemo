@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
-import { deleteOrder } from './utill';
+import { deleteOrder } from './util';
 
 /** @type {import('./$types').RequestHandler}*/
 export async function GET({ params }) {

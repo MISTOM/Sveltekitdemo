@@ -34,6 +34,6 @@ export async function GET({ url }) {
 		//@ts-ignore
 		if (e.message === 'jwt expired') return error(400, 'Token expired');
 		//@ts-ignore
-		return error(500,  e);
+		return error(500, e);
 	}
 }

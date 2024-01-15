@@ -25,7 +25,7 @@ export async function POST({ request }) {
 	} catch (e) {
 		console.log(e);
 		//@ts-ignore
-		if(e.status) return error(e.status, e.body);
+		if (e.status) return error(e.status, e.body);
 		//@ts-ignore
 		return error(500, e);
 	}

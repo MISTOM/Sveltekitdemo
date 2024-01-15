@@ -19,7 +19,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 	if (!products.every((product) => product.id && product.quantity))
 		throw error(400, 'Each product must have an id an quantity');
 
-	let productOnOrder
+	let productOnOrder;
 
 	const productIds = products.map((_product) => _product.id);
 
@@ -83,7 +83,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 			};
 		});
 
-		 await prisma.productOnOrder.createMany({
+		await prisma.productOnOrder.createMany({
 			data: productOnOrderData
 		});
 

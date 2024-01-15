@@ -45,6 +45,7 @@ export async function POST({ request }) {
 		return json({}, { status: 201 });
 	} catch (e) {
 		console.log(e);
-		return json(e, { status: 500 });
+		//@ts-ignore
+		return error(e.status, e.message);
 	}
 }

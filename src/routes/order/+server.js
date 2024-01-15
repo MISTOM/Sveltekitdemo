@@ -127,16 +127,69 @@ export async function POST({ request }) {
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 
-		//send email to the buyer displaying the order details: order id, total price, products ordered
-		// const mail = {
-		// 	to: buyerEmail,
-		// 	subject: 'Order details',
-		// 	text: `Your order was created successfully. Your order id is ${order.id}. Total price is ${order.totalPrice}`,
-		// 	html: `<h3>Your order was created successfully</h3><br><p>Your order id is ${order.id}. Total price is ${order.totalPrice}</p><br>`
-		// };
-		// await MailService.sendMail(mail);
 
-		return json(order, { status: 200 });
+		const result = await prisma.productOnOrder.findMany({
+			where: {
+				orderId: order.id
+			},
+			include: {
+				order: true,
+				product: {
+					include: {images: true}
+				}
+			}
+		})
+
+
+		/** Type Definition of the Product
+		 * @typedef {Object} Product
+		 * @property {number} id
+		 * @property {string} name
+		 * @property {string|null} description
+		 * @property {number} price
+		 * @property {string} images
+		 * @property {number} quantity
+		 * @property {number} sellerId
+		 * @property {boolean} isApproved
+		 */
+
+		/**Type Definition of the Order
+		 * @typedef {Object} Order
+		 * @property {number} orderId
+		 * @property {string} buyerName
+		 * @property {string} buyerEmail
+		 * @property {string} buyerPhone
+		 * @property {number} totalPrice
+		 * @property {boolean} isDelivered
+		 * @property {Product[]} products
+		 */
+
+		/** @type {Order[]} */
+		const grouped = result.reduce((acc, cur) => {
+			// @ts-ignore
+			const existingOrder = acc.find((order) => order.orderId === cur.orderId);
+			if (existingOrder) {
+				// @ts-ignore
+				existingOrder.products.push({ ...cur.product, orderedQuantity: cur.quantity });
+			} else {
+				// @ts-ignore
+				acc.push({
+					orderId: cur.orderId,
+					buyerName: cur.order.buyerName,
+					buyerEmail: cur.order.buyerEmail,
+					buyerPhone: cur.order.buyerPhone,
+					totalPrice: cur.order.totalPrice,
+					isDelivered: cur.order.isDelivered,
+					products: [{ ...cur.product, orderedQuantity: cur.quantity }]
+				});
+			}
+			return acc;
+		}, []);
+		// console.log('created order: ', grouped);
+
+		await MailService.sendOrderEmail(buyerEmail, grouped[0]);
+
+		return json(grouped, { status: 200 });
 	} catch (e) {
 		console.log(e);
 		//@ts-ignore

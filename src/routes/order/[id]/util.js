@@ -98,6 +98,8 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 		// });
 
 		// await MailService.sendOrderEmail(sellersEmails, buyerName, buyerEmail, buyerPhone, order.id);
+
+		//send main to buyer
 		console.log(productOnOrder);
 
 		return order;
@@ -118,14 +120,10 @@ export const deleteOrder = async (id) => {
 
 	const result = await prisma.$transaction(async (prisma) => {
 		const delPromise = prisma.productOnOrder.deleteMany({
-			where: {
-				orderId: id
-			}
+			where: { orderId: id }
 		});
 		const orderPromise = prisma.orders.delete({
-			where: {
-				id
-			}
+			where: { id }
 		});
 		const [deleted, order] = await Promise.all([delPromise, orderPromise]);
 		console.log(deleted, order);

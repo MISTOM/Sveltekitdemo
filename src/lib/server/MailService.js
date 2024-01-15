@@ -35,8 +35,6 @@ export default {
 		//validate the email
 		if (!email) throw error(400, 'Email is required');
 
-		
-
 		const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: 10 * 60 });
 		const link = `${BASE_URL}/verify?token=${token}`;
 		const mail = {

@@ -3,12 +3,20 @@ import prisma from '$lib/server/prisma';
 import MailService from '$lib/server/MailService';
 import { createOrder } from './[id]/util';
 
-// Get all orders with isDelivered = true/false
+/** @type {import('@prisma/client').Role[]} */
+let roleCache;
+async function getRoles() {
+	if (!roleCache) {
+		console.log('Querying db for roles');
+		roleCache = await prisma.role.findMany();
+	}
+	return roleCache;
+}
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
 	const isDeliveredParam = url.searchParams.get('isDelivered');
-	const isDelivered = isDeliveredParam === 'true'
+	const isDelivered = isDeliveredParam === 'true';
 
 	// Add pagination
 	const pageParam = url.searchParams.get('page');
@@ -16,18 +24,17 @@ export async function GET({ url, locals }) {
 	const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
 
 	const page = pageParam ? parseInt(pageParam) : 1;
-	const limit = limitParam ? parseInt(limitParam) : 10 ;
+	const limit = limitParam ? parseInt(limitParam) : 10;
 	const skip = (page - 1) * limit;
 
-	const roles = await prisma.role.findMany();
-	const roleId = roles.map((role) => role.id);
+	const roles = await getRoles();
 
 	let whereClause = {};
 
-	if (locals?.user?.role === roleId[0]) {
+	if (locals?.user?.role === roles[0].id) {
 		// If user is an admin, get all orders
 		whereClause = isDeliveredParam !== null ? { order: { isDelivered } } : {};
-	} else if (locals?.user?.role === roleId[1]) {
+	} else if (locals?.user?.role === roles[1].id) {
 		// If user is a seller, get only his orders
 		whereClause =
 			isDeliveredParam !== null
@@ -53,7 +60,6 @@ export async function GET({ url, locals }) {
 				where: whereClause
 			})
 		]);
-
 
 		/** Type Definition of the Product
 		 * @typedef {Object} Product
@@ -105,7 +111,7 @@ export async function GET({ url, locals }) {
 			totalPages: Math.ceil(orderCount / limit),
 			currentPage: page,
 			totalOrders: orderCount
-		}
+		};
 
 		return json(res, { status: 200 });
 	} catch (e) {

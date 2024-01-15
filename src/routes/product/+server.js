@@ -12,28 +12,25 @@ import cloudinary from '$lib/server/cloudinary';
 
 // MailService.sendMail(msg);
 
-/**
- *
- * @param {App.Locals} locals
- * @returns {Promise<import('@prisma/client').Role[]>}
- */
-async function getRoles(locals) {
-	if (!locals.session.roles) {
+/** @type {import('@prisma/client').Role[]} */
+let roleCache;
+async function getRoles() {
+	if (!roleCache) {
 		console.log('Querying db for roles');
-		locals.session.roles = await prisma.role.findMany();
+		roleCache = await prisma.role.findMany();
 	}
-	return locals.session.roles;
+	return roleCache;
 }
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
-	const roles = await getRoles(locals);
-	const role = roles.map((role) => role.id);
+	const roles = await getRoles();
 
+	console.log('roles', roles);
 	let whereClause;
 	if (locals.user) {
-		whereClause = locals.user.role === role[0] ? {} : { sellerId: locals.user.id };
+		whereClause = locals.user.role === roles[0].id ? {} : { sellerId: locals.user.id };
 	} else {
 		whereClause = { isApproved: true, images: { some: {} } };
 	}
@@ -80,10 +77,9 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 	//check if user is logged in
 	if (!user) return error(401, 'Unauthorized: You must be logged in to create a product');
 	//check if user is a seller
-	const roles = await getRoles(locals);
-	const role = roles.map((role) => role.id);
+	const roles = await getRoles();
 
-	if (user.role !== role[1])
+	if (user.role !== roles[1].id)
 		return error(401, 'Unauthorized: You must be a seller to create a product');
 
 	// get from formdata entries

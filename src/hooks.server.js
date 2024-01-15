@@ -40,7 +40,6 @@ export const handle = async ({ event, resolve }) => {
 			console.log('Unverified User:', e.message);
 		}
 	}
-	event.locals.session = {};
 
 	const contentType = event.request.headers.get('content-type');
 	if (

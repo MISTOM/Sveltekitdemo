@@ -109,19 +109,30 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
  * @param {Number} id Order Id
  */
 export const deleteOrder = async (id) => {
+	const order = await prisma.orders.findUnique({
+		where: {
+			id
+		}
+	});
+	if (!order) throw error(404, 'Order not found');
+
 	const result = await prisma.$transaction(async (prisma) => {
-		await prisma.productOnOrder.deleteMany({
+		const delPromise = prisma.productOnOrder.deleteMany({
 			where: {
 				orderId: id
 			}
 		});
-		const order = await prisma.orders.delete({
+		const orderPromise = prisma.orders.delete({
 			where: {
 				id
 			}
 		});
+		const [deleted, order] = await Promise.all([delPromise, orderPromise]);
+		console.log(deleted, order);
 		return order;
 	});
+
+	return result;
 };
 
 //TODO 📌📌

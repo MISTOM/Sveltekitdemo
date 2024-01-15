@@ -8,9 +8,6 @@ declare global {
 	declare namespace App {
 		interface Locals {
 			user;
-			session: {
-				roles?: Role[];
-			};
 			formData: FormData;
 		}
 	}

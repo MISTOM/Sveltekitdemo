@@ -1,6 +1,7 @@
 //create SendMail service
 import { BASE_URL, SECRET_KEY, SENDGRID_API_KEY } from '$env/static/private';
 import sendgrid from '@sendgrid/mail';
+import { error } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
 
 sendgrid.setApiKey(SENDGRID_API_KEY);
@@ -31,6 +32,11 @@ export default {
 	 * @param {String} email
 	 */
 	async sendVerificationEmail(email) {
+		//validate the email
+		if (!email) throw error(400, 'Email is required');
+
+		
+
 		const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: 10 * 60 });
 		const link = `${BASE_URL}/verify?token=${token}`;
 		const mail = {

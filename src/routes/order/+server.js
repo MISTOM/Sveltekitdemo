@@ -8,7 +8,7 @@ import { createOrder } from './[id]/util';
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url, locals }) {
 	const isDeliveredParam = url.searchParams.get('isDelivered');
-	const isDelivered = isDeliveredParam == 'true' ? true : false;
+	const isDelivered = isDeliveredParam === 'true'
 
 	// Add pagination
 	const pageParam = url.searchParams.get('page');
@@ -16,7 +16,7 @@ export async function GET({ url, locals }) {
 	const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
 
 	const page = pageParam ? parseInt(pageParam) : 1;
-	const limit = limitParam ? parseInt(limitParam) : 100;
+	const limit = limitParam ? parseInt(limitParam) : 10 ;
 	const skip = (page - 1) * limit;
 
 	const roles = await prisma.role.findMany();
@@ -38,16 +38,22 @@ export async function GET({ url, locals }) {
 	}
 
 	try {
-		const result = await prisma.productOnOrder.findMany({
-			where: whereClause,
-			skip,
-			take: limit,
-			orderBy: { createdAt: orderBy },
-			include: {
-				order: true,
-				product: true
-			}
-		});
+		const [result, orderCount] = await Promise.all([
+			prisma.productOnOrder.findMany({
+				where: whereClause,
+				skip,
+				take: limit,
+				orderBy: { createdAt: orderBy },
+				include: {
+					order: true,
+					product: true
+				}
+			}),
+			prisma.productOnOrder.count({
+				where: whereClause
+			})
+		]);
+
 
 		/** Type Definition of the Product
 		 * @typedef {Object} Product
@@ -94,7 +100,14 @@ export async function GET({ url, locals }) {
 			return acc;
 		}, []);
 
-		return json(grouped, { status: 200 });
+		const res = {
+			orders: grouped,
+			totalPages: Math.ceil(orderCount / limit),
+			currentPage: page,
+			totalOrders: orderCount
+		}
+
+		return json(res, { status: 200 });
 	} catch (e) {
 		console.log(e);
 		return json(e, { status: 500 });

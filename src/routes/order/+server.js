@@ -127,7 +127,6 @@ export async function POST({ request }) {
 	try {
 		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
 
-
 		const result = await prisma.productOnOrder.findMany({
 			where: {
 				orderId: order.id
@@ -135,11 +134,10 @@ export async function POST({ request }) {
 			include: {
 				order: true,
 				product: {
-					include: {images: true}
+					include: { images: true }
 				}
 			}
-		})
-
+		});
 
 		/** Type Definition of the Product
 		 * @typedef {Object} Product

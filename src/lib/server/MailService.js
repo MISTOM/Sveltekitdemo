@@ -47,11 +47,10 @@ export default {
 	},
 
 	/**
-	 * 
-	 * @param {String} buyerEmail 
+	 *
+	 * @param {String} buyerEmail
 	 */
 	async sendOrderEmail(buyerEmail, order) {
-
 		const mail = {
 			to: buyerEmail,
 			subject: 'Order Confirmation - Your Order Details',
@@ -99,14 +98,18 @@ export default {
 					  </tr>
 					</thead>
 					<tbody>
-					  ${order.products.map(product => `
+					  ${order.products
+							.map(
+								(product) => `
 						<tr>
 						  <td>${product.name}</td>
 						  <td>${product.orderedQuantity}</td>
 						  <td>${product.price}</td>
 						  <td> <img src="${product.images[0].url}" alt="${product.name}" width="100" height=100> </td>
 						  <a href="${product.images[0].url}"> image url here </a>
-						</tr>`).join('')}
+						</tr>`
+							)
+							.join('')}
 					</tbody>
 				  </table>
 		  
@@ -115,8 +118,8 @@ export default {
 				  <p>Thank you for shopping with Sneaker Empire!</p>
 				</body>
 			  </html>
-			`,
-		  };
+			`
+		};
 
 		await this.sendMail(mail);
 	}

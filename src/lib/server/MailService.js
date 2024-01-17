@@ -3,7 +3,7 @@ import { BASE_URL, SECRET_KEY, SENDGRID_API_KEY } from '$env/static/private';
 import sendgrid from '@sendgrid/mail';
 import { error } from '@sveltejs/kit';
 import jwt from 'jsonwebtoken';
-import {verifyEmailTemplate, orderEmailTemplate} from '$lib/server/emailTemplates'
+import { verifyEmailTemplate, orderEmailTemplate } from '$lib/server/emailTemplates';
 
 sendgrid.setApiKey(SENDGRID_API_KEY);
 

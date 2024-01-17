@@ -24,49 +24,41 @@ async function getRoles() {
 
 // Get all products
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url, locals }) {
-	const roles = await getRoles();
+export async function GET({ url }) {
+	//Add pagination
+	const pageParam = url.searchParams.get('page');
+	const limitParam = url.searchParams.get('limit');
+	const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
 
-	// console.log('roles', roles);
-	let whereClause;
-	if (locals.user) {
-		whereClause = locals.user.role === roles[0].id ? {} : { sellerId: locals.user.id };
-	} else {
-		whereClause = { isApproved: true, images: { some: {} } };
-	}
+	const page = pageParam ? parseInt(pageParam) : 1;
+	const limit = limitParam ? parseInt(limitParam) : 10;
+	const skip = (page - 1) * limit;
 
+	const categories = url.searchParams.get('categories');
+
+	const categoryNames = categories?.split(',');
+	if (categories) console.log('Categories here:', categoryNames);
+
+	let whereClause = {
+		isApproved: true,
+		images: { some: {} },
+		categories: {
+			some: {
+				category: {
+					name: {
+						in: categoryNames
+					}
+				}
+			}
+		}
+	};
 	try {
-		//Add pagination
-		const pageParam = url.searchParams.get('page');
-		const limitParam = url.searchParams.get('limit');
-		const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
-
-		const page = pageParam ? parseInt(pageParam) : 1;
-		const limit = limitParam ? parseInt(limitParam) : 10;
-		const skip = (page - 1) * limit;
-
-		const categories = url.searchParams.get('categories');
-
-		const categoryNames = categories?.split(',');
-		if (categories) console.log('Categories here:', categoryNames);
-
 		// Only return products with images and approved
 		const productPromise = prisma.product.findMany({
 			skip,
 			take: limit,
 			orderBy: { createdAt: orderBy },
-			where: {
-				...whereClause,
-				categories: {
-					some: {
-						category: {
-							name: {
-								in: categoryNames
-							}
-						}
-					}
-				}
-			},
+			where: {},
 			include: {
 				images: true,
 				categories: {

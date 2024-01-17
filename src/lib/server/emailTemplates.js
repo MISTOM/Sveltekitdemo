@@ -71,12 +71,12 @@ export const verifyEmailTemplate = (name, link) =>
 `;
 
 /**
- * 
- * @param {any} order 
- * @returns 
+ *
+ * @param {any} order
+ * @returns
  */
-export const orderEmailTemplate = (order) => 
-    `
+export const orderEmailTemplate = (order) =>
+	`
     <html>
     <head>
         <style>
@@ -120,8 +120,8 @@ export const orderEmailTemplate = (order) =>
       </thead>
       <tbody>
         ${order.products
-              .map(
-                  (product) => `
+					.map(
+						(product) => `
           <tr>
             <td>${product.name}</td>
             <td>${product.orderedQuantity}</td>
@@ -129,8 +129,8 @@ export const orderEmailTemplate = (order) =>
             <td> <img src="${product.images[0].url}" alt="${product.name}" width="100" height=100> </td>
             <a href="${product.images[0].url}"> image url here </a>
           </tr>`
-              )
-              .join('')}
+					)
+					.join('')}
       </tbody>
     </table>
 
@@ -138,4 +138,4 @@ export const orderEmailTemplate = (order) =>
     
     <p>Thank you for shopping with Sneaker Empire!</p>
   </body>
-</html>`
+</html>`;

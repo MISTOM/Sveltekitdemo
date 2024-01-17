@@ -8,13 +8,15 @@ import MailService from '$lib/server/MailService';
  * @param {String} buyerName
  * @param {String} buyerEmail
  * @param {String} buyerPhone
+ * @param {String} location
  * @returns {Promise<import('@prisma/client').Orders>} Returns a Promise of the order created
  */
-export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) => {
+export const createOrder = async (products, buyerName, buyerEmail, buyerPhone, location) => {
 	// Validate input data...
 	if (!buyerName) throw error(400, 'Buyer name is required');
 	if (!buyerEmail) throw error(400, 'Buyer email is required');
 	if (!buyerPhone) throw error(400, 'Buyer phone is required');
+	if (!location) throw error(400, 'Location is required');
 	if (!products || products?.length <= 0) throw error(400, 'Products are required');
 	if (!products.every((product) => product.id && product.quantity))
 		throw error(400, 'Each product must have an id an quantity');
@@ -64,6 +66,7 @@ export const createOrder = async (products, buyerName, buyerEmail, buyerPhone) =
 				buyerName,
 				buyerEmail,
 				buyerPhone,
+				location,
 				totalPrice: calculatedTotalPrice,
 				isDelivered: false
 			},

@@ -78,6 +78,7 @@ model Orders {
   buyerName   String           @db.VarChar(255)
   buyerEmail  String           @db.VarChar(255)
   buyerPhone  String           @db.VarChar(255)
+  location    String?          @db.VarChar(255)
   totalPrice  Int
   isDelivered Boolean          @default(false)
   products    ProductOnOrder[]

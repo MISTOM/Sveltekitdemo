@@ -28,6 +28,7 @@ export async function POST({ request }) {
 			buyerName: order.buyerName,
 			buyerEmail: order.buyerEmail,
 			buyerPhone: order.buyerPhone,
+			location: order.location,
 			totalPrice: order.totalPrice,
 			isDelivered: order.isDelivered,
 			products: order.products.map((productOnOrder) => ({

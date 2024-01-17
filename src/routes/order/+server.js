@@ -79,6 +79,7 @@ export async function GET({ url, locals }) {
 		 * @property {string} buyerName
 		 * @property {string} buyerEmail
 		 * @property {string} buyerPhone
+		 * @property {String} location
 		 * @property {number} totalPrice
 		 * @property {boolean} isDelivered
 		 * @property {Product[]} products
@@ -98,6 +99,7 @@ export async function GET({ url, locals }) {
 					buyerName: cur.order.buyerName,
 					buyerEmail: cur.order.buyerEmail,
 					buyerPhone: cur.order.buyerPhone,
+					location: cur.order.location,
 					totalPrice: cur.order.totalPrice,
 					isDelivered: cur.order.isDelivered,
 					products: [{ ...cur.product, orderedQuantity: cur.quantity }]
@@ -122,10 +124,10 @@ export async function GET({ url, locals }) {
 
 // Create order
 export async function POST({ request }) {
-	const { buyerName, buyerEmail, buyerPhone, products } = await request.json();
+	const { buyerName, buyerEmail, buyerPhone, location, products } = await request.json();
 
 	try {
-		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone);
+		const order = await createOrder(products, buyerName, buyerEmail, buyerPhone, location);
 
 		const result = await prisma.productOnOrder.findMany({
 			where: {
@@ -157,6 +159,7 @@ export async function POST({ request }) {
 		 * @property {string} buyerName
 		 * @property {string} buyerEmail
 		 * @property {string} buyerPhone
+		 * @property {String} location
 		 * @property {number} totalPrice
 		 * @property {boolean} isDelivered
 		 * @property {Product[]} products
@@ -176,6 +179,7 @@ export async function POST({ request }) {
 					buyerName: cur.order.buyerName,
 					buyerEmail: cur.order.buyerEmail,
 					buyerPhone: cur.order.buyerPhone,
+					location: cur.order.location,
 					totalPrice: cur.order.totalPrice,
 					isDelivered: cur.order.isDelivered,
 					products: [{ ...cur.product, orderedQuantity: cur.quantity }]

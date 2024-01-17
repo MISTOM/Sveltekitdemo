@@ -40,7 +40,7 @@ export async function POST({ request }) {
 
 		// console.log('User here', user);
 		// Set up email verification when the user signs up
-		await MailService.sendVerificationEmail(user.email);
+		await MailService.sendVerificationEmail(user.name, user.email);
 
 		return json({}, { status: 201 });
 	} catch (e) {

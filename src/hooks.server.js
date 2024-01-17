@@ -6,25 +6,23 @@ import jwt from 'jsonwebtoken';
  */
 export const handle = async ({ event, resolve }) => {
 	const ALLOWED_ORIGINS = ['http://localhost:5174', 'https://sneaker-empire-ten.vercel.app'];
+	const ALLOWED_METHODS = 'GET, POST, PUT, DELETE, OPTIONS';
+	const ALLOWED_HEADERS = 'Content-Type, Authorization';
 	const origin = event.request.headers.get('origin');
 
-	console.log(origin);
-
 	//Turned off csrf protection so I only need to check if origin is allowed
-
 	if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+		console.log('Forbidden origin', origin);
 		return new Response('Forbidden', { status: 403 });
 	}
-
-	console.log('origin', origin);
 
 	// Apply cors headers
 	if (event.request.method === 'OPTIONS') {
 		return new Response(null, {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-				'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+				'Access-Control-Allow-Methods': ALLOWED_METHODS,
+				'Access-Control-Allow-Headers': ALLOWED_HEADERS
 			}
 		});
 	}
@@ -34,7 +32,6 @@ export const handle = async ({ event, resolve }) => {
 	if (token) {
 		try {
 			event.locals.user = jwt.verify(token, SECRET_KEY);
-			console.log('Verified token', event.locals.user);
 		} catch (e) {
 			//@ts-ignore
 			console.log('Unverified User:', e.message);
@@ -42,21 +39,19 @@ export const handle = async ({ event, resolve }) => {
 	}
 
 	const contentType = event.request.headers.get('content-type');
+	//If request is a form data, parse it and set it in event.locals.formData
 	if (
-		(event.request.method === 'PUT' || event.request.method === 'POST') &&
+		['POST', 'PUT'].includes(event.request.method) &&
 		contentType &&
 		contentType.includes('multipart/form-data')
 	) {
-		const formData = await event.request.formData();
-		event.locals.formData = formData;
-	} else {
-		console.log('Error: No form data');
+		event.locals.formData = await event.request.formData();
 	}
 
 	const response = await resolve(event);
 	response.headers.append('Access-Control-Allow-Origin', '*');
-	response.headers.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-	response.headers.append('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+	response.headers.append('Access-Control-Allow-Methods', ALLOWED_METHODS);
+	response.headers.append('Access-Control-Allow-Headers', ALLOWED_HEADERS);
 
 	return response;
 };

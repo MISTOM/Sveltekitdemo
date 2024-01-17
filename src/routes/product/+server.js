@@ -27,7 +27,7 @@ async function getRoles() {
 export async function GET({ url, locals }) {
 	const roles = await getRoles();
 
-	console.log('roles', roles);
+	// console.log('roles', roles);
 	let whereClause;
 	if (locals.user) {
 		whereClause = locals.user.role === roles[0].id ? {} : { sellerId: locals.user.id };
@@ -42,18 +42,34 @@ export async function GET({ url, locals }) {
 		const orderBy = url.searchParams.get('orderBy') === 'asc' ? 'asc' : 'desc';
 
 		const page = pageParam ? parseInt(pageParam) : 1;
-		const limit = limitParam ? parseInt(limitParam) : 100;
+		const limit = limitParam ? parseInt(limitParam) : 10;
 		const skip = (page - 1) * limit;
+
+		const categories = url.searchParams.get('categories');
+
+		const categoryNames = categories?.split(',');
+		if (categories) console.log('Categories here:', categoryNames);
 
 		// Only return products with images and approved
 		const productPromise = prisma.product.findMany({
 			skip,
 			take: limit,
 			orderBy: { createdAt: orderBy },
-			where: whereClause,
+			where: {
+				...whereClause,
+				categories: {
+					some: {
+						category: {
+							name: {
+								in: categoryNames
+							}
+						}
+					}
+				}
+			},
 			include: {
 				images: true,
-				categoryies: {
+				categories: {
 					include: {
 						category: true
 					}
@@ -99,7 +115,6 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 
 	if (!name || !price || !images) return error(400, 'Missing required fields: name, price, images');
 
-
 	/**
 	 * Validate categories and return their ids
 	 * @param {String[]} categories
@@ -107,7 +122,7 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 	 */
 	async function validateCategories(categories) {
 		//check if categories is available, if not retrun an empty array
-		console.log('Inside Validate',categories)
+		console.log('Inside Validate', categories);
 		if (!categories || categories.length === 0) return [];
 		const categoryIds = categories.map((category) => {
 			const id = parseInt(category);
@@ -168,14 +183,14 @@ export async function POST({ request, locals: { user, formData }, locals }) {
 			data: productData,
 			include: {
 				images: true,
-				categoryies: true
+				categories: true
 			}
 		});
 		console.log('product', product, 'Categories', categoryIds);
 		if (categoryIds.length === 0) return json(product, { status: 201 });
 
 		//add categories to product
-		console.log('Adding categories to product')
+		console.log('Adding categories to product');
 		const categoriesData = categoryIds.map((id) => ({ productId: product.id, categoryId: id }));
 		await prisma.productCategory.createMany({
 			data: categoriesData

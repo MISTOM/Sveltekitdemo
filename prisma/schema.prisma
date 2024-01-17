@@ -38,7 +38,7 @@ model Product {
   isApproved  Boolean           @default(false)
   orders      ProductOnOrder[]
   images      Image[]
-  categoryies ProductCategory[]
+  categories  ProductCategory[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @default(now()) @updatedAt
 }

@@ -39,11 +39,12 @@ export default {
 
 		const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: 10 * 60 });
 		const link = `${BASE_URL}/verify?token=${token}`;
+		const devLink = `http://localhost:5174/verify?token=${token}`;
 		const mail = {
 			to: email,
 			subject: 'Verify your email',
 			text: `Click on this link to verify your email ${link}`,
-			html: verifyEmailTemplate(name, link)
+			html: verifyEmailTemplate(name, devLink)
 		};
 		await this.sendMail(mail);
 	},

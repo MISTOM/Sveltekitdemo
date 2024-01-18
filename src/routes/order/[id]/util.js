@@ -198,3 +198,42 @@ export const deleteOrder = async (id) => {
 
 //     // Create the order in the database...
 // };
+
+// // Group products by seller
+// const productsBySeller = dbProducts.reduce((acc, product) => {
+// 	if (!acc[product.sellerId]) {
+// 	  acc[product.sellerId] = [];
+// 	}
+// 	acc[product.sellerId].push(product);
+// 	return acc;
+//   }, {});
+
+//   // Process each seller's products separately
+//   for (const sellerId in productsBySeller) {
+// 	let sellerTotalPrice = 0;
+// 	const sellerProducts = productsBySeller[sellerId];
+
+// 	// Check Quantity and calculate total price for this seller
+// 	for (const orderProduct of sellerProducts) {
+// 	  const productOnOrder = dbProducts.find((dbProduct) => dbProduct.id === orderProduct.id);
+// 	  if (!productOnOrder)
+// 		throw error(404, `The product with the ID ${orderProduct.id} was not found`);
+// 	  if (productOnOrder.quantity < orderProduct.quantity)
+// 		throw error(
+// 		  400,
+// 		  `The requested quantity for the product ${productOnOrder.name} is not available. Only ${productOnOrder.quantity} is available.`
+// 		);
+// 	  sellerTotalPrice += productOnOrder.price * orderProduct.quantity; // Calculate total price for this seller
+// 	}
+
+// 	// Process Payment for this seller's products
+// 	// Use M-Pesa API to transfer funds to the seller's account
+
+// 	//Update Quantities for this seller's products
+// 	for (const orderProduct of sellerProducts) {
+// 	  await prisma.product.update({
+// 		where: { id: orderProduct.id },
+// 		data: { quantity: { decrement: orderProduct.quantity } }
+// 	  });
+// 	}
+//   }

@@ -39,25 +39,17 @@ export async function GET({ url }) {
 	const categoryNames = categories?.split(',');
 	if (categories) console.log('Categories here:', categoryNames);
 
+	/** @type {import('@prisma/client').Prisma.ProductWhereInput;} */
 	let whereClause = {
 		isApproved: true,
-		images: { some: {} },
-		categories: {
-			some: {
-				category: {
-					name: {
-						in: categoryNames
-					}
-				}
-			}
-		}
+		images: { some: {} }
 	};
 	try {
 		// Only return products with images and approved
 		const productPromise = prisma.product.findMany({
 			skip,
 			take: limit,
-			orderBy: { createdAt: orderBy },
+			orderBy: { price: orderBy },
 			where: {},
 			include: {
 				images: true,
@@ -72,8 +64,14 @@ export async function GET({ url }) {
 
 		const [products, productCount] = await Promise.all([productPromise, countPromise]);
 
+		const filteredProducts = products.filter((product) => {
+			if (!categoryNames) return product;
+			const productCategoryNames = product.categories.map((c) => c?.category?.name);
+			return categoryNames.every((categoryName) => productCategoryNames.includes(categoryName));
+		});
+
 		const result = {
-			products,
+			product: filteredProducts,
 			totalPages: Math.ceil(productCount / limit),
 			currentPage: page,
 			totalProducts: productCount

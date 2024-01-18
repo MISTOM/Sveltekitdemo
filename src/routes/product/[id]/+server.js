@@ -5,13 +5,15 @@ import prisma from '$lib/server/prisma';
 import cloudinary from '$lib/server/cloudinary.js';
 
 /**
- * Get Roles
- * @param {App.Locals} locals
- * @returns {Promise<import('@prisma/client').Role[]>}
+ * @type {import('@prisma/client').Role[]}
  */
-async function getRoles(locals) {
-	if (!locals.session.roles) locals.session.roles = await prisma.role.findMany();
-	return locals.session.roles;
+let roleCache;
+async function getRoles() {
+	if (!roleCache) {
+		console.log('Querying db for roles');
+		roleCache = await prisma.role.findMany();
+	}
+	return roleCache;
 }
 export async function GET({ params }) {
 	try {
@@ -31,16 +33,15 @@ export async function GET({ params }) {
 }
 
 // Update product by id
-export async function PUT({ params, request, locals }) {
+export async function PUT({ params, locals }) {
 	if (!params.id) return json({ message: 'Product ID not provided to update' }, { status: 400 });
 
 	//check if user is logged in
 	if (!locals.user) return error(401, 'Unauthorized: You must be logged in to update a product');
 
 	//check if user is a seller
-	const role = await getRoles(locals);
-	const roleId = role.map((role) => role.id);
-	if (locals.user.role !== roleId[1])
+	const roles = await getRoles();
+	if (locals.user.role !== roles[1].id)
 		return error(401, 'Unauthorized: You must be a seller to update a product');
 
 	//check if user is the owner of the product
@@ -60,6 +61,7 @@ export async function PUT({ params, request, locals }) {
 	const price = locals.formData.get('price')?.toString();
 	const images = locals.formData.getAll('images');
 	const quantity = locals.formData.get('quantity')?.toString();
+	const categoriesId = locals.formData.getAll('categoriesId'); // example ['1', '2']
 	const toDeletePublicIds = locals.formData.getAll('toDeletePublicIds'); // This should be an array of publicIds of the images to delete: example ['publicId1', 'publicId2']
 
 	try {
@@ -71,8 +73,48 @@ export async function PUT({ params, request, locals }) {
 					description: description ? description : undefined,
 					price: price ? parseInt(price) : undefined,
 					quantity: quantity ? parseInt(quantity) : undefined
-				}
+				}, include: { images: true, categories: true }
 			});
+
+			if (categoriesId?.length === 0) return json(updatedProduct, { status: 201 });
+			//validate categories
+
+			//Add Categories in a transaction
+			//check if the category id is a number when converting from string
+			const categoryIds = categoriesId.map((categoryId) => {
+				const id = parseInt(categoryId);
+				if (categoryId === '' || isNaN(id)) throw error(400, 'Invalid or Empty category id');
+				return id;
+			});
+			const productCategories = categoryIds.map((categoryId) => ({
+				productId: parseInt(params.id),
+				categoryId: categoryId
+			}));
+
+			/** @type {any} */
+			let deleteOldCategoriesPromise
+			if (categoriesId?.length !== 0 ) {
+				deleteOldCategoriesPromise = prisma.productCategory.deleteMany({
+					where: {
+						productId: parseInt(params.id)
+					}
+				});
+			}
+			// Create new associations with the updated categories
+			const createNewCategoriesPromise = prisma.productCategory.createMany({
+				data: productCategories
+			});
+
+			const [deleteCategoriesRes, createCategoryRes] = await prisma.$transaction([
+				deleteOldCategoriesPromise,
+				createNewCategoriesPromise
+			]);
+			console.log(
+				'Deleted Category Res:',
+				deleteCategoriesRes,
+				'Created Category Res: ',
+				createCategoryRes
+			);
 
 			return json(updatedProduct, { status: 201 });
 		}
@@ -89,33 +131,60 @@ export async function PUT({ params, request, locals }) {
 			});
 		}
 
-		// Insert new images to Cloudinary if there are images
-
-		/**
-		 * @type {Array<{url: string, publicId: string}>}
-		 */
-		let uploadedImages = [];
-		if (images && images.length > 0) {
-			const uploadPromises = images.map(async (image) => {
-				try {
-					const buffer = await new Response(image).arrayBuffer();
-					const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
-					const result = await cloudinary.uploader.upload(dataUrl);
-					return { url: result.secure_url, publicId: result.public_id };
-				} catch (e) {
-					console.log(e);
-					return error(500, `Failed to Upload images${e}`);
-				}
-			});
-
-			uploadedImages = (await Promise.allSettled(uploadPromises))
-				.filter((result) => result.status === 'fulfilled')
-				// @ts-ignore
-				.map((result) => result.value);
-		}
-
+		
 		// Update the product and images in a prisma transaction
 		return prisma.$transaction(async (prisma) => {
+			console.log("Category ids here: ",categoriesId )
+			
+			const categoryIds = categoriesId.map((categoryId) => {
+				const id = parseInt(categoryId);
+				if (categoryId === '' || isNaN(id)) throw error(400, 'Invalid or Empty category id');
+				return id;
+			});
+
+			const productCategories = categoryIds.map((categoryId) => ({
+				productId: parseInt(params.id),
+				categoryId: categoryId
+			}));
+
+			let deleteOldCategoriesPromise;
+			if (categoriesId?.length !== 0 ) {
+			deleteOldCategoriesPromise = prisma.productCategory.deleteMany({
+				where: {
+					productId: parseInt(params.id)
+				}
+			});
+		}
+
+			// Create new associations with the updated categories
+			const createNewCategoriesPromise = prisma.productCategory.createMany({
+				data: productCategories
+			});
+
+			// Insert new images to Cloudinary if there are images
+			/**
+			 * @type {Array<{url: string, publicId: string}>}
+			*/
+			let uploadedImages = [];
+			if (images && images.length > 0) {
+				const uploadPromises = images.map(async (image) => {
+					try {
+						const buffer = await new Response(image).arrayBuffer();
+						const dataUrl = `data:${image.type};base64,${Buffer.from(buffer).toString('base64')}`;
+						const result = await cloudinary.uploader.upload(dataUrl);
+						return { url: result.secure_url, publicId: result.public_id };
+					} catch (e) {
+						console.log(e);
+						return error(500, `Failed to Upload images${e}`);
+					}
+				});
+
+				uploadedImages = (await Promise.allSettled(uploadPromises))
+					.filter((result) => result.status === 'fulfilled')
+					// @ts-ignore
+					.map((result) => result.value);
+			}
+
 			// Delete the old images from the database
 			const _toDeletePublicIds = toDeletePublicIds.map((publicId) => publicId.toString());
 			const deletedImagesPromise = prisma.image.deleteMany({
@@ -145,20 +214,26 @@ export async function PUT({ params, request, locals }) {
 					price: price ? parseInt(price) : undefined,
 					quantity: quantity ? parseInt(quantity) : undefined
 				},
-				include: { images: true }
+				include: { images: true, categories: true }
 			});
 
+			
+
 			const result = await Promise.all([
+				deleteOldCategoriesPromise,
+				createNewCategoriesPromise,
 				deletedImagesPromise,
 				newImagesPromise,
 				updatedProductPromise
 			]);
 			console.log(result);
 
-			return json(result[2], { status: 201 });
+			return json(result[4], { status: 201 });
 		});
 	} catch (e) {
 		console.log(e);
+		// @ts-ignore
+		if (e.status !== 500) return error(e.status, e.body);
 		return error(500, `An error occurred while trying to update the product ${e}`);
 	}
 }
@@ -184,7 +259,7 @@ export async function DELETE({ params, locals }) {
 		}
 	});
 
-	const roles = await getRoles(locals);
+	const roles = await getRoles();
 	if (!product) return error(404, 'Product to delete not found');
 
 	//check if user is a admin
